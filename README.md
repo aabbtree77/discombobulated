@@ -64,7 +64,7 @@ class CWALK:
         self.sigma *= self.sigma_multiplier
 ```
 
-The amazing part is that this simplicity beats the CMAES with all its bells and whistles. Due to a larger lambda, but also because of a neglected CSA blow up and non-gaussianity which are not easy to deal with. In my experience, this is also on par with BIPOP-aCMAES and RCMAES, but is a lot more stable and easier to deal with.
+The amazing part is that this simplicity beats the CMAES with all its bells and whistles. Due to a larger lambda, but also because of a neglected CSA blow up and non-gaussianity which are not easy to deal with. In my experience, this is also on par with BIPOP-aCMAES and RCMAES, but is a lot more stable and clear.
 
 So no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative paths, crazy empirical parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP-like grid searches...
 
