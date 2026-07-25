@@ -1,12 +1,18 @@
 ## Derivative-Free Optimization
 
-My favorite algorithm is (mu, lambda)-ES with an exponentially decaying (manually selected) step size (sigma). It solves what the best ones solve (BIPOP-aCMAES in [pycma](https://github.com/CMA-ES/pycma), RCMAES in [Minion](https://github.com/khoirulmuzakka/Minion), [RDEx_SOP](https://github.com/SichenTao/IEEE-CEC-2025-Competition-RDEx-Series/blob/main/RDEx_SOP/code/rdex-sop/RDEx.cpp)...) without stability problems and complexity.
+(mu, lambda)-ES with an exponentially decaying step size is a very underrated algorithm. It solves what the best ones solve (BIPOP-aCMAES in [pycma](https://github.com/CMA-ES/pycma), RCMAES in [Minion](https://github.com/khoirulmuzakka/Minion), [RDEx_SOP](https://github.com/SichenTao/IEEE-CEC-2025-Competition-RDEx-Series/blob/main/RDEx_SOP/code/rdex-sop/RDEx.cpp)...) without stability problems and complexity.
 
-The catch is that sometimes one needs to tune the decay (sigma_multiplier) per problem, but the default is often fine and the algorithm is so underrated.
+The catch is that sometimes one needs to tune the decay (sigma_multiplier) per problem, but the default is often fine.
 
-Many think that covariance matrices and the CSA controller is what pushes the CMAES ahead, but in my experience the isotropic sampling discarding half of the worst candidates does it all even better. It avoids entrapment automatically, there is no need for increasing step sizes, the exponential schedule will do. This also scales much better with increasing lambda and D.
+Many think that covariance matrices and the CSA controller is what pushes the CMAES ahead, but in my experience the isotropic sampling discarding the worse half does it all even better. The problem is not in the isotropy and directions, those get revealed anyway. It is in the step sizes. Estimating covariances/Hessians is never a good idea anyway, esp. in larger D.
 
-The whole algorithm is literally this code:
+Notably, the selection itself avoids entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient.
+
+This evolution also scales much better with increasing lambda and D. I love matrices, but I love not having to deal with them even more. Lambdas need to be larger than D, the CMAES default is often very limited and relies too much on restarts. The CSA is also very hard to make it work for increasing lambda. Set cs approaching to unity and you will see that as lambda increases, the step sizes start to explode due to the "mu-order" statistic, the mean mu-vector is no longer Gaussian, the norm can be 3x or even 10x larger than sqrt(D), which blows up the step sizes. The CMAES will turn on some numerical kill switch or restart with no progress, but this is a symptom, the problem is the controller operating around a wrong norm target.
+
+It is better to impose the exponential decay as in simulated annealing (SA), dropping the CSA and cumulation paths entirely. Still a parameter to tune, but it is a lot easier to deal with the step size decay vs (i) decay, (ii) stalling, (iii) increase, and (iv) a potential blow up. And we do not have much theory for the mu-mean statistics.
+
+The whole (mu, lambda)-ES algorithm is literally this code:
 
 ```python
 import numpy as np
@@ -58,11 +64,13 @@ class CWALK:
         self.sigma *= self.sigma_multiplier
 ```
 
-No CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative paths, crazy empirical parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP-like grid searches.
+The amazing part is that this simplicity beats the CMAES with all its bells and whistles. Due to a larger lambda, but also because of a neglected CSA blow up and non-gaussianity which are not easy to deal with. In my experience, this is also on par with BIPOP-aCMAES and RCMAES, but is a lot more stable and easier to deal with.
+
+So no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative paths, crazy empirical parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP-like grid searches...
 
 The quintessential solvable case is a wiggly function with a weak global trend such as the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-Regarding the unsolvable mixtures such as the F12 in CEC2022, they are hopeless, but I suspect a simulated annealing (SA) wizard might crack them, it is just not worth it.
+Regarding the unsolvable mixtures such as the F12 in CEC2022, they are hopeless, but I suspect an SA wizard might crack them, it is just not worth it.
 
 ## Setup
 
