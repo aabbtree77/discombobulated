@@ -4,13 +4,15 @@
 
 Many think that covariance matrices and the CSA controller is what pushes CMAESes ahead, but the problem is not in the isotropy and directions, those get revealed anyway. We can also relatively easily detect whether we have a clear direction or not, i.e. by checking if the norm of the mu-sorted mean of directions is greater than sqrt(D/mu) per each generation, without resorting to cumulation in time!
 
-The trouble is, we do not know how to deal with any of this globally in time, how much to increase the step size, how it will play out in the next generations when the mean is at the new place. The CSA in the CMAES is often too good to be true.  
+The trouble is, we do not know how to deal with any of this globally in time, how much to increase the step size, how it will play out in the next generations when the mean is at the new place. The CSA in the CMAES is often too good to be true.
 
-Notably, the sampling in (mu, lambda)-ES may itself avoid entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient. On the other hand, we do not know much even about (mu, lambda)-ES, let alone CMAE.
+Notably, the sampling in (mu, lambda)-ES may itself avoid entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient. On the other hand, we do not know much even about (mu, lambda)-ES, let alone CMAESes.
 
 This evolution scales much better with increasing lambda and D. I love matrices, but I love not dealing with them even more.
 
-Lambda needs to be larger than D. As soon as it starts approaching 10-100D, the step sizes start to explode in any CMAES due to the "mu-order" statistic. The mean of the mu-vector is no longer Gaussian, it can go up to sqrt(D) rather than sqrt(D/mu), which blows up the exponent in sigma. The CSA controller operates around the target norm it does not know much about as the latter is problem-specific. We have no statistical theory about the mu-sorted mean of directions. Non-isotropy/covariance estimates make this even worse. A larger lambda amplifies this problem.
+Lambda needs to be larger than D. CMAES's default 4+floor(3\*log(N)) is just too small, considering that the cube in D has 2^D corners and the global volume in CEC is 200^20.
+
+As soon as one increases lambda to 10-100D, the step sizes begin to explode in CMAESes due to "mu-order" statistic. The mean of the mu-vector of directions is no longer Gaussian. It can go up to sqrt(D) rather than sqrt(D/mu), and this is in the exponent in the sigma update. The CSA controller operates around the target norm it does not know much about as the latter is problem-specific. We have no statistical theory about the mu-sorted mean of directions. Non-isotropy/covariance estimates make this even worse. A larger lambda amplifies this problem.
 
 Therefore, it is better to impose the exponential decay as in simulated annealing (SA), dropping the CSA and cumulation paths entirely.
 
@@ -61,8 +63,8 @@ class CWALK:
         # update mean
         self.xmean = np.mean(X[order[:self.mu]], axis=0)
         self.normz = np.linalg.norm(np.mean(self.Z[order[:self.mu]], axis=0))
-        
-        # update sigma 
+
+        # update sigma
         if sigma is not None:
             self.sigma = sigma
 ```
@@ -71,7 +73,7 @@ This is more effective than the default CMAES with all its bells and whistles. D
 
 In terms of pure problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically. However, the advantage is an enormous removal of complexity: no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative path parameters with parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP...
 
-This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES with an exponentially decaying sigma as a platform. At least we have not overfitted anything. 
+This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES with an exponentially decaying sigma as a platform. At least we have not overfitted anything.
 
 The quintessential solvable case is a wiggly function with a weak global trend such as the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
@@ -112,45 +114,45 @@ fopt    : 102.61
 Created : 2026-07-27 00:29:20
 
 Initial sigma : 1
-evals=    100000 best_f=5.299968e+02 error=4.273868e+02 sigma=8.017e-01 
-evals=    200000 best_f=4.000308e+02 error=2.974208e+02 sigma=6.368e-01 
-evals=    300000 best_f=3.666502e+02 error=2.640402e+02 sigma=5.058e-01 
-evals=    400000 best_f=3.473649e+02 error=2.447549e+02 sigma=4.018e-01 
-evals=    500000 best_f=3.265643e+02 error=2.239543e+02 sigma=3.192e-01 
-evals=    600000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.535e-01 
-evals=    700000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.014e-01 
-evals=    800000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.600e-01 
-evals=    900000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.271e-01 
-evals=   1000000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.009e-01 
-evals=   1100000 best_f=3.240048e+02 error=2.213948e+02 sigma=8.017e-02 
-evals=   1200000 best_f=3.240048e+02 error=2.213948e+02 sigma=6.368e-02 
-evals=   1300000 best_f=3.121135e+02 error=2.095035e+02 sigma=5.058e-02 
-evals=   1400000 best_f=3.013288e+02 error=1.987188e+02 sigma=4.018e-02 
-evals=   1500000 best_f=2.701156e+02 error=1.675056e+02 sigma=3.192e-02 
-evals=   1600000 best_f=2.091583e+02 error=1.065483e+02 sigma=2.535e-02 
-evals=   1700000 best_f=1.721276e+02 error=6.951763e+01 sigma=2.014e-02 
-evals=   1800000 best_f=1.526473e+02 error=5.003727e+01 sigma=1.600e-02 
-evals=   1900000 best_f=1.316534e+02 error=2.904339e+01 sigma=1.271e-02 
-evals=   2000000 best_f=1.206309e+02 error=1.802090e+01 sigma=1.009e-02 
-evals=   2100000 best_f=1.119537e+02 error=9.343675e+00 sigma=8.017e-03 
-evals=   2200000 best_f=1.104614e+02 error=7.851370e+00 sigma=6.368e-03 
-evals=   2300000 best_f=1.074570e+02 error=4.847032e+00 sigma=5.058e-03 
-evals=   2400000 best_f=1.054741e+02 error=2.864093e+00 sigma=4.018e-03 
-evals=   2500000 best_f=1.047269e+02 error=2.116855e+00 sigma=3.192e-03 
-evals=   2600000 best_f=1.039641e+02 error=1.354105e+00 sigma=2.535e-03 
-evals=   2700000 best_f=1.035237e+02 error=9.137222e-01 sigma=2.014e-03 
-evals=   2800000 best_f=1.032888e+02 error=6.788106e-01 sigma=1.600e-03 
-evals=   2900000 best_f=1.031278e+02 error=5.178318e-01 sigma=1.271e-03 
-evals=   3000000 best_f=1.029578e+02 error=3.478413e-01 sigma=1.009e-03 
-evals=   3100000 best_f=1.028953e+02 error=2.853422e-01 sigma=8.017e-04 
-evals=   3200000 best_f=1.028682e+02 error=2.582219e-01 sigma=6.368e-04 
-evals=   3300000 best_f=1.028322e+02 error=2.222083e-01 sigma=5.058e-04 
-evals=   3400000 best_f=1.028317e+02 error=2.216639e-01 sigma=4.018e-04 
-evals=   3500000 best_f=1.028190e+02 error=2.090154e-01 sigma=3.192e-04 
-evals=   3600000 best_f=1.028112e+02 error=2.012098e-01 sigma=2.535e-04 
-evals=   3700000 best_f=1.028073e+02 error=1.973345e-01 sigma=2.014e-04 
-evals=   3800000 best_f=1.028049e+02 error=1.948547e-01 sigma=1.600e-04 
-evals=   3900000 best_f=1.028034e+02 error=1.934189e-01 sigma=1.271e-04 
+evals=    100000 best_f=5.299968e+02 error=4.273868e+02 sigma=8.017e-01
+evals=    200000 best_f=4.000308e+02 error=2.974208e+02 sigma=6.368e-01
+evals=    300000 best_f=3.666502e+02 error=2.640402e+02 sigma=5.058e-01
+evals=    400000 best_f=3.473649e+02 error=2.447549e+02 sigma=4.018e-01
+evals=    500000 best_f=3.265643e+02 error=2.239543e+02 sigma=3.192e-01
+evals=    600000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.535e-01
+evals=    700000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.014e-01
+evals=    800000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.600e-01
+evals=    900000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.271e-01
+evals=   1000000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.009e-01
+evals=   1100000 best_f=3.240048e+02 error=2.213948e+02 sigma=8.017e-02
+evals=   1200000 best_f=3.240048e+02 error=2.213948e+02 sigma=6.368e-02
+evals=   1300000 best_f=3.121135e+02 error=2.095035e+02 sigma=5.058e-02
+evals=   1400000 best_f=3.013288e+02 error=1.987188e+02 sigma=4.018e-02
+evals=   1500000 best_f=2.701156e+02 error=1.675056e+02 sigma=3.192e-02
+evals=   1600000 best_f=2.091583e+02 error=1.065483e+02 sigma=2.535e-02
+evals=   1700000 best_f=1.721276e+02 error=6.951763e+01 sigma=2.014e-02
+evals=   1800000 best_f=1.526473e+02 error=5.003727e+01 sigma=1.600e-02
+evals=   1900000 best_f=1.316534e+02 error=2.904339e+01 sigma=1.271e-02
+evals=   2000000 best_f=1.206309e+02 error=1.802090e+01 sigma=1.009e-02
+evals=   2100000 best_f=1.119537e+02 error=9.343675e+00 sigma=8.017e-03
+evals=   2200000 best_f=1.104614e+02 error=7.851370e+00 sigma=6.368e-03
+evals=   2300000 best_f=1.074570e+02 error=4.847032e+00 sigma=5.058e-03
+evals=   2400000 best_f=1.054741e+02 error=2.864093e+00 sigma=4.018e-03
+evals=   2500000 best_f=1.047269e+02 error=2.116855e+00 sigma=3.192e-03
+evals=   2600000 best_f=1.039641e+02 error=1.354105e+00 sigma=2.535e-03
+evals=   2700000 best_f=1.035237e+02 error=9.137222e-01 sigma=2.014e-03
+evals=   2800000 best_f=1.032888e+02 error=6.788106e-01 sigma=1.600e-03
+evals=   2900000 best_f=1.031278e+02 error=5.178318e-01 sigma=1.271e-03
+evals=   3000000 best_f=1.029578e+02 error=3.478413e-01 sigma=1.009e-03
+evals=   3100000 best_f=1.028953e+02 error=2.853422e-01 sigma=8.017e-04
+evals=   3200000 best_f=1.028682e+02 error=2.582219e-01 sigma=6.368e-04
+evals=   3300000 best_f=1.028322e+02 error=2.222083e-01 sigma=5.058e-04
+evals=   3400000 best_f=1.028317e+02 error=2.216639e-01 sigma=4.018e-04
+evals=   3500000 best_f=1.028190e+02 error=2.090154e-01 sigma=3.192e-04
+evals=   3600000 best_f=1.028112e+02 error=2.012098e-01 sigma=2.535e-04
+evals=   3700000 best_f=1.028073e+02 error=1.973345e-01 sigma=2.014e-04
+evals=   3800000 best_f=1.028049e+02 error=1.948547e-01 sigma=1.600e-04
+evals=   3900000 best_f=1.028034e+02 error=1.934189e-01 sigma=1.271e-04
 evals=   4000000 best_f=1.028017e+02 error=1.917442e-01 sigma=1.009e-04
 
 Finished
@@ -164,13 +166,13 @@ Progress saved to     : progress_bbob2009_f24.csv
 
 ```
 
-It takes 1e4xD evals to reach 0.2% relative error. One can reduce 
+It takes 1e4xD evals to reach 0.2% relative error. One can reduce
 the budget 10x by setting lambda to 10D rather than default 100D, the relative
 error will be 10x larger, but more pragmatic. Restart to avoid adversarial seeds.
 
 For harder functions, it might be better to start restarting more, e.g. run 10x
-the same algorithm with a different initial point at the budget of 1e4xD instead 
-of a single run with the budget 1e5xD. Or not. This is all problem-dependent 
+the same algorithm with a different initial point at the budget of 1e4xD instead
+of a single run with the budget 1e5xD. Or not. This is all problem-dependent
 and extremely moot.
 
 ## Worst Case: CEC-2022 F12
@@ -188,25 +190,25 @@ fopt    : 2700.0
 Created : 2026-07-27 00:53:02
 
 Initial sigma : 20
-evals=    100000 best_f=3.078020e+03 error=3.780203e+02 sigma=1.274e+01 
-evals=    200000 best_f=2.995935e+03 error=2.959349e+02 sigma=8.036e+00 
-evals=    300000 best_f=2.986139e+03 error=2.861390e+02 sigma=5.070e+00 
-evals=    400000 best_f=2.986139e+03 error=2.861390e+02 sigma=3.199e+00 
-evals=    500000 best_f=2.986139e+03 error=2.861390e+02 sigma=2.019e+00 
-evals=    600000 best_f=2.985843e+03 error=2.858433e+02 sigma=1.274e+00 
-evals=    700000 best_f=2.985738e+03 error=2.857379e+02 sigma=8.036e-01 
-evals=    800000 best_f=2.985697e+03 error=2.856973e+02 sigma=5.070e-01 
-evals=    900000 best_f=2.985667e+03 error=2.856670e+02 sigma=3.199e-01 
-evals=   1000000 best_f=2.985649e+03 error=2.856490e+02 sigma=2.019e-01 
-evals=   1100000 best_f=2.985646e+03 error=2.856463e+02 sigma=1.274e-01 
-evals=   1200000 best_f=2.985643e+03 error=2.856425e+02 sigma=8.036e-02 
-evals=   1300000 best_f=2.985642e+03 error=2.856422e+02 sigma=5.070e-02 
-evals=   1400000 best_f=2.985642e+03 error=2.856419e+02 sigma=3.199e-02 
-evals=   1500000 best_f=2.985642e+03 error=2.856417e+02 sigma=2.019e-02 
-evals=   1600000 best_f=2.985642e+03 error=2.856417e+02 sigma=1.274e-02 
-evals=   1700000 best_f=2.985642e+03 error=2.856416e+02 sigma=8.036e-03 
-evals=   1800000 best_f=2.985642e+03 error=2.856416e+02 sigma=5.070e-03 
-evals=   1900000 best_f=2.985642e+03 error=2.856416e+02 sigma=3.199e-03 
+evals=    100000 best_f=3.078020e+03 error=3.780203e+02 sigma=1.274e+01
+evals=    200000 best_f=2.995935e+03 error=2.959349e+02 sigma=8.036e+00
+evals=    300000 best_f=2.986139e+03 error=2.861390e+02 sigma=5.070e+00
+evals=    400000 best_f=2.986139e+03 error=2.861390e+02 sigma=3.199e+00
+evals=    500000 best_f=2.986139e+03 error=2.861390e+02 sigma=2.019e+00
+evals=    600000 best_f=2.985843e+03 error=2.858433e+02 sigma=1.274e+00
+evals=    700000 best_f=2.985738e+03 error=2.857379e+02 sigma=8.036e-01
+evals=    800000 best_f=2.985697e+03 error=2.856973e+02 sigma=5.070e-01
+evals=    900000 best_f=2.985667e+03 error=2.856670e+02 sigma=3.199e-01
+evals=   1000000 best_f=2.985649e+03 error=2.856490e+02 sigma=2.019e-01
+evals=   1100000 best_f=2.985646e+03 error=2.856463e+02 sigma=1.274e-01
+evals=   1200000 best_f=2.985643e+03 error=2.856425e+02 sigma=8.036e-02
+evals=   1300000 best_f=2.985642e+03 error=2.856422e+02 sigma=5.070e-02
+evals=   1400000 best_f=2.985642e+03 error=2.856419e+02 sigma=3.199e-02
+evals=   1500000 best_f=2.985642e+03 error=2.856417e+02 sigma=2.019e-02
+evals=   1600000 best_f=2.985642e+03 error=2.856417e+02 sigma=1.274e-02
+evals=   1700000 best_f=2.985642e+03 error=2.856416e+02 sigma=8.036e-03
+evals=   1800000 best_f=2.985642e+03 error=2.856416e+02 sigma=5.070e-03
+evals=   1900000 best_f=2.985642e+03 error=2.856416e+02 sigma=3.199e-03
 evals=   2000000 best_f=2.985642e+03 error=2.856416e+02 sigma=2.019e-03
 
 Finished
@@ -227,4 +229,3 @@ Most of the state of the art is here around 10% relative error. Some latest PSOs
 
 2. Schwefel, Hans-Paul. Numerische Optimierung von Computer-Modellen
    mittels der Evolutionsstrategie. Basel, Stuttgart, Birkhäuser, 1977.
-   
