@@ -1,37 +1,37 @@
 ## Derivative-Free Optimization
 
-(mu, lambda)-ES with an exponentially decaying step size is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering.
+(mu, lambda)-ES with an exponentially decaying step size and a large lambda (100D) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering.
 
-The catch is that sometimes one needs to tune the decay (sigma_multiplier) per problem, but the default is often fine.
+Many think that covariance matrices and the CSA controller is what pushes CMAESes ahead, but the problem is not in the isotropy and directions, those get revealed anyway. We can also relatively easily detect whether we have a clear direction or not, i.e. by checking if the norm of the mu-sorted mean of directions is greater than sqrt(D/mu) per each generation, without resorting to cumulation in time!
 
-Many think that covariance matrices and the CSA controller is what pushes CMAESes ahead, but the problem is not in the isotropy and directions, those get revealed anyway. It is in the step sizes.
+The trouble is, we do not know how to deal with any of this globally in time, how much to increase the step size, how it will play out in the next generations when the mean is at the new place. The CSA in the CMAES is often too good to be true.  
 
-Notably, the sampling in (mu, lambda)-ES itself avoids entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient.
+Notably, the sampling in (mu, lambda)-ES may itself avoid entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient. On the other hand, we do not know much even about (mu, lambda)-ES, let alone CMAE.
 
-This evolution also scales much better with increasing lambda and D. I love matrices, but I love not having to deal with them even more.
+This evolution scales much better with increasing lambda and D. I love matrices, but I love not dealing with them even more.
 
-Lambda also needs to be larger than D. As soon as it starts approaching 10D, the step sizes start to explode in any CMAES due to the "mu-order" statistic. The mean of the mu-vector is no longer Gaussian, the whitened norm can be 3x or even 10x larger than sqrt(D), which blows up the step size. The CSA controller operates around a wrong target norm.
+Lambda needs to be larger than D. As soon as it starts approaching 10-100D, the step sizes start to explode in any CMAES due to the "mu-order" statistic. The mean of the mu-vector is no longer Gaussian, it can go up to sqrt(D) rather than sqrt(D/mu), which blows up the exponent in sigma. The CSA controller operates around the target norm it does not know much about as the latter is problem-specific. We have no statistical theory about the mu-sorted mean of directions. Non-isotropy/covariance estimates make this even worse. A larger lambda amplifies this problem.
 
-It is better to impose the exponential decay as in simulated annealing (SA), dropping the CSA and cumulation paths entirely. Still a parameter to tune, but it is a lot easier to deal with the step size decay vs (i) decay, (ii) stalling, (iii) increase, and (iv) a potential blow up. And we do not have much theory for the mu-mean statistics.
+Therefore, it is better to impose the exponential decay as in simulated annealing (SA), dropping the CSA and cumulation paths entirely.
 
 The whole (mu, lambda)-ES algorithm is literally this code:
 
 ```python
 import numpy as np
 
+
 class CWALK:
-    def __init__(self, D, x0=None, sigma=1.0, sigma_multiplier=np.exp(-1e-5), lam=None, rng=None):
+    def __init__(self, D, x0=None, sigma=1.0, lam=None, rng=None):
         self.D = D
-        self.sigma_multiplier = sigma_multiplier
         self.rng = np.random.default_rng() if rng is None else rng
 
         if x0 is None:
-            raise ValueError("x0 must be provided by the script.")
+            raise ValueError("x0 must be provided by the driver script.")
 
         self.xmean = np.asarray(x0, dtype=float).copy()
         self.sigma = float(sigma)
 
-        self.lam = 10 * D if lam is None else int(lam)
+        self.lam = 100 * D if lam is None else int(lam)
         self.mu = self.lam // 2
 
         self.best_x = self.xmean.copy()
@@ -41,17 +41,16 @@ class CWALK:
     # ASK
     # ------------------------------------------------------------
     def ask(self):
-        Z = self.rng.standard_normal((self.lam, self.D))
-        X = self.xmean + self.sigma * Z
+        self.Z = self.rng.standard_normal((self.lam, self.D))
+        X = self.xmean + self.sigma * self.Z
         return X
 
     # ------------------------------------------------------------
     # TELL
     # ------------------------------------------------------------
-    def tell(self, X, fitness):
+    def tell(self, X, fitness, sigma):
         X = np.asarray(X, dtype=float)
         fitness = np.asarray(fitness, dtype=float)
-
         order = np.argsort(fitness)
 
         # best-so-far
@@ -61,18 +60,22 @@ class CWALK:
 
         # update mean
         self.xmean = np.mean(X[order[:self.mu]], axis=0)
-
-        # step-size schedule
-        self.sigma *= self.sigma_multiplier
+        self.normz = np.linalg.norm(np.mean(self.Z[order[:self.mu]], axis=0))
+        
+        # update sigma 
+        if sigma is not None:
+            self.sigma = sigma
 ```
 
-Remarkably, this is more effective than the default CMAES with all its bells and whistles. Due to a 30x larger lambda, but also because of the CSA blow up and the mu-mean non-normality which are not easy to deal with. (mu, lambda=10D)-ES is on par with BIPOP-aCMAES.
+This is more effective than the default CMAES with all its bells and whistles. Due to 100x larger lambda, the algorithm tries harder on a single run while CMAES stalls early and relies on restarts and grid searches.
 
-The advantages are enormous: no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative paths, crazy empirical parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP grid searches...
+In terms of pure problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically. However, the advantage is an enormous removal of complexity: no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative path parameters with parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP...
+
+This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES with an exponentially decaying sigma as a platform. At least we have not overfitted anything. 
 
 The quintessential solvable case is a wiggly function with a weak global trend such as the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-Regarding mixtures such as F12 in CEC2022, these are hopeless.
+Regarding mixtures such as F12 in CEC2022, these are hopeless for any algorithm out there at the moment.
 
 ## Setup
 
@@ -94,119 +97,129 @@ uv pip install \
     minionpy
 ```
 
-## Best Case Example: BBOB-2009 F24
+## Best Case: BBOB-2009 F24
 
 ```bash
 python3 test_bbob2009.py
+
+Problem
 ----------------------------------------
 Backend : BBOB
 Name    : bbob_f024_i01_d40
 D       : 40
 Bounds  : [-5.0, 5.0] for every coordinate
 fopt    : 102.61
-Created : 2026-07-25 13:41:05
+Created : 2026-07-27 00:29:20
 
 Initial sigma : 1
-evals=     10000 best_f=5.689207e+02 error=4.663107e+02 sigma=7.788e-01
-evals=     20000 best_f=4.049768e+02 error=3.023668e+02 sigma=6.065e-01
-evals=     30000 best_f=3.913395e+02 error=2.887295e+02 sigma=4.724e-01
-evals=     40000 best_f=3.518843e+02 error=2.492743e+02 sigma=3.679e-01
-evals=     50000 best_f=3.339904e+02 error=2.313804e+02 sigma=2.865e-01
-evals=     60000 best_f=3.339904e+02 error=2.313804e+02 sigma=2.231e-01
-evals=     70000 best_f=3.339904e+02 error=2.313804e+02 sigma=1.738e-01
-evals=     80000 best_f=3.027807e+02 error=2.001707e+02 sigma=1.353e-01
-evals=     90000 best_f=3.027807e+02 error=2.001707e+02 sigma=1.054e-01
-evals=    100000 best_f=3.027807e+02 error=2.001707e+02 sigma=8.208e-02
-evals=    110000 best_f=3.027807e+02 error=2.001707e+02 sigma=6.393e-02
-evals=    120000 best_f=3.027807e+02 error=2.001707e+02 sigma=4.979e-02
-evals=    130000 best_f=3.027807e+02 error=2.001707e+02 sigma=3.877e-02
-evals=    140000 best_f=2.906895e+02 error=1.880795e+02 sigma=3.020e-02
-evals=    150000 best_f=2.413436e+02 error=1.387336e+02 sigma=2.352e-02
-evals=    160000 best_f=2.034952e+02 error=1.008852e+02 sigma=1.832e-02
-evals=    170000 best_f=1.724560e+02 error=6.984605e+01 sigma=1.426e-02
-evals=    180000 best_f=1.468839e+02 error=4.427388e+01 sigma=1.111e-02
-evals=    190000 best_f=1.345976e+02 error=3.198756e+01 sigma=8.652e-03
-evals=    200000 best_f=1.232769e+02 error=2.066693e+01 sigma=6.738e-03
-evals=    210000 best_f=1.170949e+02 error=1.448487e+01 sigma=5.248e-03
-evals=    220000 best_f=1.131380e+02 error=1.052795e+01 sigma=4.087e-03
-evals=    230000 best_f=1.118096e+02 error=9.199592e+00 sigma=3.183e-03
-evals=    240000 best_f=1.092467e+02 error=6.636718e+00 sigma=2.479e-03
-evals=    250000 best_f=1.088372e+02 error=6.227180e+00 sigma=1.930e-03
-evals=    260000 best_f=1.080927e+02 error=5.482740e+00 sigma=1.503e-03
-evals=    270000 best_f=1.075881e+02 error=4.978138e+00 sigma=1.171e-03
-evals=    280000 best_f=1.072953e+02 error=4.685341e+00 sigma=9.119e-04
-evals=    290000 best_f=1.070397e+02 error=4.429728e+00 sigma=7.102e-04
-evals=    300000 best_f=1.069117e+02 error=4.301656e+00 sigma=5.531e-04
-evals=    310000 best_f=1.068279e+02 error=4.217944e+00 sigma=4.307e-04
-evals=    320000 best_f=1.067653e+02 error=4.155310e+00 sigma=3.355e-04
-evals=    330000 best_f=1.067249e+02 error=4.114893e+00 sigma=2.613e-04
-evals=    340000 best_f=1.066891e+02 error=4.079094e+00 sigma=2.035e-04
-evals=    350000 best_f=1.066718e+02 error=4.061836e+00 sigma=1.585e-04
-evals=    360000 best_f=1.066545e+02 error=4.044539e+00 sigma=1.234e-04
-evals=    370000 best_f=1.066461e+02 error=4.036095e+00 sigma=9.611e-05
-evals=    380000 best_f=1.066389e+02 error=4.028945e+00 sigma=7.485e-05
-evals=    390000 best_f=1.066342e+02 error=4.024204e+00 sigma=5.829e-05
-evals=    400000 best_f=1.066311e+02 error=4.021071e+00 sigma=4.540e-05
+evals=    100000 best_f=5.299968e+02 error=4.273868e+02 sigma=8.017e-01 
+evals=    200000 best_f=4.000308e+02 error=2.974208e+02 sigma=6.368e-01 
+evals=    300000 best_f=3.666502e+02 error=2.640402e+02 sigma=5.058e-01 
+evals=    400000 best_f=3.473649e+02 error=2.447549e+02 sigma=4.018e-01 
+evals=    500000 best_f=3.265643e+02 error=2.239543e+02 sigma=3.192e-01 
+evals=    600000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.535e-01 
+evals=    700000 best_f=3.240048e+02 error=2.213948e+02 sigma=2.014e-01 
+evals=    800000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.600e-01 
+evals=    900000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.271e-01 
+evals=   1000000 best_f=3.240048e+02 error=2.213948e+02 sigma=1.009e-01 
+evals=   1100000 best_f=3.240048e+02 error=2.213948e+02 sigma=8.017e-02 
+evals=   1200000 best_f=3.240048e+02 error=2.213948e+02 sigma=6.368e-02 
+evals=   1300000 best_f=3.121135e+02 error=2.095035e+02 sigma=5.058e-02 
+evals=   1400000 best_f=3.013288e+02 error=1.987188e+02 sigma=4.018e-02 
+evals=   1500000 best_f=2.701156e+02 error=1.675056e+02 sigma=3.192e-02 
+evals=   1600000 best_f=2.091583e+02 error=1.065483e+02 sigma=2.535e-02 
+evals=   1700000 best_f=1.721276e+02 error=6.951763e+01 sigma=2.014e-02 
+evals=   1800000 best_f=1.526473e+02 error=5.003727e+01 sigma=1.600e-02 
+evals=   1900000 best_f=1.316534e+02 error=2.904339e+01 sigma=1.271e-02 
+evals=   2000000 best_f=1.206309e+02 error=1.802090e+01 sigma=1.009e-02 
+evals=   2100000 best_f=1.119537e+02 error=9.343675e+00 sigma=8.017e-03 
+evals=   2200000 best_f=1.104614e+02 error=7.851370e+00 sigma=6.368e-03 
+evals=   2300000 best_f=1.074570e+02 error=4.847032e+00 sigma=5.058e-03 
+evals=   2400000 best_f=1.054741e+02 error=2.864093e+00 sigma=4.018e-03 
+evals=   2500000 best_f=1.047269e+02 error=2.116855e+00 sigma=3.192e-03 
+evals=   2600000 best_f=1.039641e+02 error=1.354105e+00 sigma=2.535e-03 
+evals=   2700000 best_f=1.035237e+02 error=9.137222e-01 sigma=2.014e-03 
+evals=   2800000 best_f=1.032888e+02 error=6.788106e-01 sigma=1.600e-03 
+evals=   2900000 best_f=1.031278e+02 error=5.178318e-01 sigma=1.271e-03 
+evals=   3000000 best_f=1.029578e+02 error=3.478413e-01 sigma=1.009e-03 
+evals=   3100000 best_f=1.028953e+02 error=2.853422e-01 sigma=8.017e-04 
+evals=   3200000 best_f=1.028682e+02 error=2.582219e-01 sigma=6.368e-04 
+evals=   3300000 best_f=1.028322e+02 error=2.222083e-01 sigma=5.058e-04 
+evals=   3400000 best_f=1.028317e+02 error=2.216639e-01 sigma=4.018e-04 
+evals=   3500000 best_f=1.028190e+02 error=2.090154e-01 sigma=3.192e-04 
+evals=   3600000 best_f=1.028112e+02 error=2.012098e-01 sigma=2.535e-04 
+evals=   3700000 best_f=1.028073e+02 error=1.973345e-01 sigma=2.014e-04 
+evals=   3800000 best_f=1.028049e+02 error=1.948547e-01 sigma=1.600e-04 
+evals=   3900000 best_f=1.028034e+02 error=1.934189e-01 sigma=1.271e-04 
+evals=   4000000 best_f=1.028017e+02 error=1.917442e-01 sigma=1.009e-04
 
 Finished
 ----------------------------------------
-Completed evaluations : 400000
-Requested budget      : 400000
-Best f                : 1.066310714024e+02
+Completed evaluations : 4000000
+Requested budget      : 4000000
+Best f                : 1.028017441860e+02
 fopt                  : 1.026100000000e+02
-Error                 : 4.021071402368e+00
+Error                 : 1.917441860190e-01
 Progress saved to     : progress_bbob2009_f24.csv
 
 ```
 
-To get the zero error, increase lambda 10x, decrease the negative sigma_multiplier exponent 10x,
-increase the budget 100x, but these are epsilon matters and tougher cases won't get optimized this easily.
+It takes 1e4xD evals to reach 0.2% relative error. One can reduce 
+the budget 10x by setting lambda to 10D rather than default 100D, the relative
+error will be 10x larger, but more pragmatic. Restart to avoid adversarial seeds.
 
-## Worst Case Example: CEC2022-2022 F12
+For harder functions, it might be better to start restarting more, e.g. run 10x
+the same algorithm with a different initial point at the budget of 1e4xD instead 
+of a single run with the budget 1e5xD. Or not. This is all problem-dependent 
+and extremely moot.
+
+## Worst Case: CEC-2022 F12
 
 ```bash
 python3 test_cec2022.py
+
+Problem
 ----------------------------------------
 Backend : CEC2022
 Name    : CEC2022 f12
 D       : 20
 Bounds  : [-100.0, 100.0] for every coordinate
 fopt    : 2700.0
-Created : 2026-07-25 13:41:13
+Created : 2026-07-27 00:53:02
 
 Initial sigma : 20
-evals=     10000 best_f=3.055804e+03 error=3.558041e+02 sigma=1.213e+01
-evals=     20000 best_f=2.998437e+03 error=2.984373e+02 sigma=7.358e+00
-evals=     30000 best_f=2.985656e+03 error=2.856557e+02 sigma=4.463e+00
-evals=     40000 best_f=2.976510e+03 error=2.765102e+02 sigma=2.707e+00
-evals=     50000 best_f=2.976106e+03 error=2.761062e+02 sigma=1.642e+00
-evals=     60000 best_f=2.975896e+03 error=2.758959e+02 sigma=9.957e-01
-evals=     70000 best_f=2.975771e+03 error=2.757711e+02 sigma=6.039e-01
-evals=     80000 best_f=2.975741e+03 error=2.757411e+02 sigma=3.663e-01
-evals=     90000 best_f=2.975728e+03 error=2.757285e+02 sigma=2.222e-01
-evals=    100000 best_f=2.975720e+03 error=2.757196e+02 sigma=1.348e-01
-evals=    110000 best_f=2.975719e+03 error=2.757187e+02 sigma=8.174e-02
-evals=    120000 best_f=2.975718e+03 error=2.757183e+02 sigma=4.958e-02
-evals=    130000 best_f=2.975718e+03 error=2.757178e+02 sigma=3.007e-02
-evals=    140000 best_f=2.975718e+03 error=2.757178e+02 sigma=1.824e-02
-evals=    150000 best_f=2.975718e+03 error=2.757177e+02 sigma=1.106e-02
-evals=    160000 best_f=2.975718e+03 error=2.757177e+02 sigma=6.709e-03
-evals=    170000 best_f=2.975718e+03 error=2.757177e+02 sigma=4.069e-03
-evals=    180000 best_f=2.975718e+03 error=2.757177e+02 sigma=2.468e-03
-evals=    190000 best_f=2.975718e+03 error=2.757177e+02 sigma=1.497e-03
-evals=    200000 best_f=2.975718e+03 error=2.757177e+02 sigma=9.080e-04
+evals=    100000 best_f=3.078020e+03 error=3.780203e+02 sigma=1.274e+01 
+evals=    200000 best_f=2.995935e+03 error=2.959349e+02 sigma=8.036e+00 
+evals=    300000 best_f=2.986139e+03 error=2.861390e+02 sigma=5.070e+00 
+evals=    400000 best_f=2.986139e+03 error=2.861390e+02 sigma=3.199e+00 
+evals=    500000 best_f=2.986139e+03 error=2.861390e+02 sigma=2.019e+00 
+evals=    600000 best_f=2.985843e+03 error=2.858433e+02 sigma=1.274e+00 
+evals=    700000 best_f=2.985738e+03 error=2.857379e+02 sigma=8.036e-01 
+evals=    800000 best_f=2.985697e+03 error=2.856973e+02 sigma=5.070e-01 
+evals=    900000 best_f=2.985667e+03 error=2.856670e+02 sigma=3.199e-01 
+evals=   1000000 best_f=2.985649e+03 error=2.856490e+02 sigma=2.019e-01 
+evals=   1100000 best_f=2.985646e+03 error=2.856463e+02 sigma=1.274e-01 
+evals=   1200000 best_f=2.985643e+03 error=2.856425e+02 sigma=8.036e-02 
+evals=   1300000 best_f=2.985642e+03 error=2.856422e+02 sigma=5.070e-02 
+evals=   1400000 best_f=2.985642e+03 error=2.856419e+02 sigma=3.199e-02 
+evals=   1500000 best_f=2.985642e+03 error=2.856417e+02 sigma=2.019e-02 
+evals=   1600000 best_f=2.985642e+03 error=2.856417e+02 sigma=1.274e-02 
+evals=   1700000 best_f=2.985642e+03 error=2.856416e+02 sigma=8.036e-03 
+evals=   1800000 best_f=2.985642e+03 error=2.856416e+02 sigma=5.070e-03 
+evals=   1900000 best_f=2.985642e+03 error=2.856416e+02 sigma=3.199e-03 
+evals=   2000000 best_f=2.985642e+03 error=2.856416e+02 sigma=2.019e-03
 
 Finished
 ----------------------------------------
-Completed evaluations : 200000
-Requested budget      : 200000
-Best f                : 2.975717705667e+03
+Completed evaluations : 2000000
+Requested budget      : 2000000
+Best f                : 2.985641603543e+03
 fopt                  : 2.700000000000e+03
-Error                 : 2.757177056671e+02
-Progress saved to     : progress_cec_f12.csv
+Error                 : 2.856416035435e+02
+Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Nothing works on this function, some PSOs get into 2860s, but still far away.
+Most of the state of the art is here around 10% relative error. Some latest PSOs (2026) get into 2860s, but still far away.
 
 ## References
 
@@ -214,3 +227,4 @@ Nothing works on this function, some PSOs get into 2860s, but still far away.
 
 2. Schwefel, Hans-Paul. Numerische Optimierung von Computer-Modellen
    mittels der Evolutionsstrategie. Basel, Stuttgart, Birkhäuser, 1977.
+   

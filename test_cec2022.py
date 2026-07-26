@@ -5,42 +5,47 @@ import numpy as np
 from cwalk import CWALK
 from problems import make_cec2022
 
-
 # ============================================================
 # Settings
 # ============================================================
 
-SEED = 20260723
+# To run with random init point each time, 
+# comment out rng in es = CWALK(... below.
+# SEED is for reproducibility.
+# Restart to get the best results.
 
-# This function is a hopeless mixture of multimodals with rotations.
-# Currently beyond any modern tech, but might not be solvable
-# in principle with DFOs due to lack of structure and vast space in
-# 10^D with coord ranges -100.0... 100.0. Anything decent gets into
-# fopt = 2970 or so rapidly, say in 100K evals, and then stalls.
-# The best I saw some PSO 2026 methods that get into 2860s, but this
-# is still not 2700s and not worthy, people overfit their algorithms
-# in those competitions like crazy, I would not go there.
-# Suffered enough on MNIST digits at their time, burning PC for the
-# entire night for better params, overfitting, it's not worth it.
-# Nobody remembers MNIST digits anymore, but how much time was
-# wasted there! And on CIFAR10 and the rest.
+SEED = 20260723
 
 FUNCTION = 12
 DIMENSION = 20
+# Note: BBOB2009 and CECs have very limited dimension sets, one cannot use arbitrary
+# values. These benchmarks use C++ code which builds rotation matrices to mangle cost funcs
+# to make them harder, the matrices are stored as dense arrays with messy static bounds
+# which limit DIMENSION to 40 on BBOB-2009 and 20 on CEC2022.
 
-BUDGET = 10_000*DIMENSION
-PROGRESS_EVERY = 10_000
+BUDGET = 100_000*DIMENSION
+PROGRESS_EVERY = 100_000
 
-LAMBDA = 10*DIMENSION
+#Default lambda is 100D, set it with None or use a number:
+LAMBDA = None
 
 INIT_AT_ZERO = False
 
 USE_MANUAL_SIGMA = False
-MANUAL_SIGMA = 20.0
+MANUAL_SIGMA = 0.1
 
-SIGMA_MULTIPLIER = np.exp(-1e-2)
+LOGFILE = "progress_cec2022_f12.csv"
 
-LOGFILE = "progress_cec_f12.csv"
+# ============================================================
+
+def sigma_multiplier(completed_evals: int, budget: int) -> float:
+    """
+    Exponential decay:
+        0%   -> 1.0
+        100% -> 1e-4
+    """
+    t = np.clip(completed_evals / budget, 0.0, 1.0)
+    return 10.0 ** (-4.0 * t)    
 
 
 # ============================================================
@@ -73,12 +78,12 @@ def main():
     # --------------------------------------------------------
 
     if USE_MANUAL_SIGMA:
-        sigma = MANUAL_SIGMA
+        sigma0 = MANUAL_SIGMA
     else:
         largest_range = np.max(problem.bounds[:, 1] - problem.bounds[:, 0])
-        sigma = 0.10 * largest_range
+        sigma0 = 0.10 * largest_range
 
-    print(f"Initial sigma : {sigma:.6g}")
+    print(f"Initial sigma : {sigma0:.6g}")
 
     # --------------------------------------------------------
     # optimizer
@@ -87,10 +92,9 @@ def main():
     es = CWALK(
         D=problem.D,
         x0=x0,
-        sigma=sigma,
-        sigma_multiplier=SIGMA_MULTIPLIER,
+        sigma=sigma0,
         lam=LAMBDA,
-        rng=rng,
+        rng=rng, #comment out to get random init point every time this file runs
     )
 
     # --------------------------------------------------------
@@ -122,27 +126,20 @@ def main():
                 f"evals={next_progress:10d} "
                 f"best_f={best_f:.6e} "
                 f"error={abs(best_f-problem.fopt):.6e} "
-                f"sigma={es.sigma:.3e}"
+                f"sigma={es.sigma:.3e} "
+           #    f"normz={es.normz:.3e} "
             )
 
             next_progress += PROGRESS_EVERY
-        
-        '''    
-        if completed_evals < 2e6:
-            es.sigma = 100
-        elif completed_evals < 4e6:
-            es.sigma = 50
-        elif completed_evals < 6e6:
-            es.sigma = 20     
-        '''
-        
+            
         X = es.ask()
 
         Xeval = problem.project(X)
 
         F = problem.evaluate(Xeval)
 
-        es.tell(X, F)
+        sigma = sigma0 * sigma_multiplier(completed_evals, BUDGET)
+        es.tell(X, F, sigma)
 
         best_f = min(best_f, float(np.min(F)))
 

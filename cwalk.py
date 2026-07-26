@@ -1,9 +1,9 @@
 import numpy as np
 
+
 class CWALK:
-    def __init__(self, D, x0=None, sigma=1.0, sigma_multiplier=np.exp(-1e-5), lam=None, rng=None):
+    def __init__(self, D, x0=None, sigma=1.0, lam=None, rng=None):
         self.D = D
-        self.sigma_multiplier = sigma_multiplier
         self.rng = np.random.default_rng() if rng is None else rng
 
         if x0 is None:
@@ -12,7 +12,7 @@ class CWALK:
         self.xmean = np.asarray(x0, dtype=float).copy()
         self.sigma = float(sigma)
 
-        self.lam = 10 * D if lam is None else int(lam)
+        self.lam = 100 * D if lam is None else int(lam)
         self.mu = self.lam // 2
 
         self.best_x = self.xmean.copy()
@@ -22,17 +22,16 @@ class CWALK:
     # ASK
     # ------------------------------------------------------------
     def ask(self):
-        Z = self.rng.standard_normal((self.lam, self.D))
-        X = self.xmean + self.sigma * Z
+        self.Z = self.rng.standard_normal((self.lam, self.D))
+        X = self.xmean + self.sigma * self.Z
         return X
 
     # ------------------------------------------------------------
     # TELL
     # ------------------------------------------------------------
-    def tell(self, X, fitness):
+    def tell(self, X, fitness, sigma):
         X = np.asarray(X, dtype=float)
         fitness = np.asarray(fitness, dtype=float)
-
         order = np.argsort(fitness)
 
         # best-so-far
@@ -42,7 +41,8 @@ class CWALK:
 
         # update mean
         self.xmean = np.mean(X[order[:self.mu]], axis=0)
-
-        # placeholder step-size schedule
-        self.sigma *= self.sigma_multiplier
-        #self.sigma = 1e-1 
+        self.normz = np.linalg.norm(np.mean(self.Z[order[:self.mu]], axis=0))
+        
+        # update sigma 
+        if sigma is not None:
+            self.sigma = sigma
