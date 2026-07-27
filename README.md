@@ -1,26 +1,13 @@
 ## Derivative-Free Optimization
 
-(mu, lambda)-ES with an exponentially decaying step size and a large lambda (100D) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering.
+(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D rather than O(log(D))) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering. It raises the key question:
 
-Many think that covariance matrices and the CSA controller is what pushes CMAESes ahead, but the problem is not in the isotropy and directions, those get revealed anyway. We can also relatively easily detect whether we have a clear direction or not, i.e. by checking if the norm of the mu-sorted mean of directions is greater than sqrt(D/mu) per each generation, without resorting to cumulation in time!
-
-The trouble is, we do not know how to deal with any of this globally in time, how much to increase the step size, how it will play out in the next generations when the mean is at the new place. The CSA in the CMAES is often too good to be true.
-
-Notably, the sampling in (mu, lambda)-ES may itself avoid entrapment. There is no need for a "nudge" with increasing step sizes and all the control theory, the step size decay/monotony is sufficient. On the other hand, we do not know much even about (mu, lambda)-ES, let alone CMAESes.
-
-This evolution scales much better with increasing lambda and D. I love matrices, but I love not dealing with them even more.
-
-Lambda needs to be larger than D. CMAES's default 4+floor(3\*log(N)) is just too small, considering that the cube in D has 2^D corners and the global volume in CEC is 200^20.
-
-As soon as one increases lambda to 10-100D, the step sizes begin to explode in CMAESes due to "mu-order" statistic. The mean of the mu-vector of directions is no longer Gaussian. It can go up to sqrt(D) rather than sqrt(D/mu), and this is in the exponent in the sigma update. The CSA controller operates around the target norm it does not know much about as the latter is problem-specific. We have no statistical theory about the mu-sorted mean of directions. Non-isotropy/covariance estimates make this even worse. A larger lambda amplifies this problem.
-
-Therefore, it is better to impose the exponential decay as in simulated annealing (SA), dropping the CSA and cumulation paths entirely.
+**Do we need the CMAES at all?**
 
 The whole (mu, lambda)-ES algorithm is literally this code:
 
 ```python
 import numpy as np
-
 
 class CWALK:
     def __init__(self, D, x0=None, sigma=1.0, lam=None, rng=None):
@@ -69,15 +56,13 @@ class CWALK:
             self.sigma = sigma
 ```
 
-This is more effective than the default CMAES with all its bells and whistles. Due to 100x larger lambda, the algorithm tries harder on a single run while CMAES stalls early and relies on restarts and grid searches.
+In terms of problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. No covariance matrix condition number 1e12 warnings, the CSA controller blowup, i.e. [Issue 231](https://github.com/CMA-ES/pycma/issues/231), dsigma, hsigma, active weights, nonuniform weights, BIPOP...
 
-In terms of pure problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically. However, the advantage is an enormous removal of complexity: no CSA-related step size blow ups anymore, 1e12 condition number warnings, cumulative path parameters with parameter hierarchies overfitting who knows what function in what paper/benchmark/decade, dsigma, hsigma, active/nonactive weights, nonuniform weights, BIPOP...
+This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES as it is doing the thing and we have not overfitted anything.
 
-This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES with an exponentially decaying sigma as a platform. At least we have not overfitted anything.
+One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-The quintessential solvable case is a wiggly function with a weak global trend such as the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
-
-Regarding mixtures such as F12 in CEC2022, these are hopeless for any algorithm out there at the moment.
+Regarding mixtures such as the F12 in CEC2022, these seem to be hopeless.
 
 ## Setup
 
@@ -168,12 +153,9 @@ Progress saved to     : progress_bbob2009_f24.csv
 
 It takes 1e4xD evals to reach 0.2% relative error. One can reduce
 the budget 10x by setting lambda to 10D rather than default 100D, the relative
-error will be 10x larger, but more pragmatic. Restart to avoid adversarial seeds.
+error will be 10x larger, but more pragmatic.
 
-For harder functions, it might be better to start restarting more, e.g. run 10x
-the same algorithm with a different initial point at the budget of 1e4xD instead
-of a single run with the budget 1e5xD. Or not. This is all problem-dependent
-and extremely moot.
+Restart a few times to avoid adversarial seeds.
 
 ## Worst Case: CEC-2022 F12
 
