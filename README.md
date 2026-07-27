@@ -56,7 +56,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In terms of problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. No covariance matrix condition number 1e12 warnings, the CSA controller blowup, i.e. [Issue 231](https://github.com/CMA-ES/pycma/issues/231), dsigma, hsigma, active weights, nonuniform weights, BIPOP...
+In terms of problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Look into [Issue 231](https://github.com/CMA-ES/pycma/issues/231) and esp. [the CMAES sigma update rule](https://github.com/CMA-ES/pycma/blob/development/cma/sigma_adaptation.py), if you can find one. Does this look reliable?
 
 This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES as it is doing the thing and we have not overfitted anything.
 
