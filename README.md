@@ -151,11 +151,30 @@ Progress saved to     : progress_bbob2009_f24.csv
 
 ```
 
-It takes 1e4xD evals to reach 0.2% relative error. One can reduce
-the budget 10x by setting lambda to 10D rather than default 100D, the relative
-error will be 10x larger, but more pragmatic.
+It takes 1e4xD evals to reach 0.2% relative error. Reduce budget 10x, reduce lambda 10x, relative error will increase 10x.
+Increase budget 10x, increase lambda 10x, relative error will decrease 100x!
 
-Restart a few times to avoid adversarial seeds.
+However, to get a guaranteed convergence is not easy. For 1e7xD relative error is still O(1e-5).
+
+For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply BOBYQA if epsilon matters.
+
+lambda=1D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
+
+Restart only to avoid adversarial initial points. Restarting does not improve precision/convergence that much. However, it is essential. Adding bursts to sigma does not allow the algorithm to escape adversarial local optima.
+
+Normality is not essential, but other distributions do not improve optmization. One can reach relative error O(1e-5) with
+
+```python
+self.Z = self.rng.laplace(0.0, 1.0, (self.lam, self.D))
+```
+
+or even uniform distribution:
+
+```python
+self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
+```
+
+The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
 ## Worst Case: CEC-2022 F12
 
@@ -203,7 +222,7 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is here around 10% relative error. Some latest PSOs (2026) get into 2860s, but still far away.
+Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900.
 
 ## References
 
