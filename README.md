@@ -64,7 +64,7 @@ In terms of pure search (no iterative variable remappings to solve ill-condition
 
 One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-Regarding mixtures such as the F12 in CEC2022, these seem to be hopeless.
+Regarding mixtures such as the F12 in CEC2022, these seem to be theoretically hopeless, or optimized adequately, pragmatically speaking.
 
 ## Setup
 
