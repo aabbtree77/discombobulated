@@ -4,7 +4,7 @@
 
 **Do we need the CMAES at all?**
 
-It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [pycma issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such problems. However, notice that the CMAES does not solve many of them either. It adds complexity, including a dubious [CSA](https://github.com/CMA-ES/pycma/issues/130).
+It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such problems. However, notice that the CMAES does not solve many of them either. It adds complexity, including a dubious [CSA](https://github.com/CMA-ES/pycma/issues/130).
 
 If we ignore artificial ill-conditioned rotations, fixed budgets, epsilon targets, I still very much prefer (mu, lambda)-ES.
 
