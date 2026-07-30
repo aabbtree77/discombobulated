@@ -1,8 +1,12 @@
 ## Derivative-Free Optimization
 
-(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D rather than O(log(D))) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering. It raises the key question:
+(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering. It raises the key question:
 
 **Do we need the CMAES at all?**
+
+It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [pycma issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such problems. However, notice that the CMAES does not solve many of them either. It adds complexity, including a dubious [CSA](https://github.com/CMA-ES/pycma/issues/130).
+
+If we ignore artificial ill-conditioned rotations, fixed budgets, epsilon targets, I still very much prefer (mu, lambda)-ES.
 
 The whole (mu, lambda)-ES algorithm is literally this code:
 
@@ -56,9 +60,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In terms of problem solving, (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Look into [Issue 231](https://github.com/CMA-ES/pycma/issues/231) and esp. [the CMAES sigma update rule](https://github.com/CMA-ES/pycma/blob/development/cma/sigma_adaptation.py), if you can find one. Does this look reliable?
-
-This is still a somewhat bold claim and needs more testing, but I believe more in (mu=lambda/2, lambda=100D)-ES as it is doing the thing and we have not overfitted anything.
+In terms of pure search (no iterative variable remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Look into [Issue 231](https://github.com/CMA-ES/pycma/issues/231) and esp. [the CMAES sigma update rule](https://github.com/CMA-ES/pycma/blob/development/cma/sigma_adaptation.py), if you can find one.
 
 One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
@@ -223,10 +225,3 @@ Progress saved to     : progress_cec2022_f12.csv
 ```
 
 Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900.
-
-## References
-
-1. Rechenberg, Ingo. Evolutionsstrategie: Optimierung technischer Systeme nach Prinzipien der biologischen evolution [Evolution Strategy: Optimization of Technical Systems According to the Principles of Biological Evolution]. Frommann-Holzboog Verlag, Stuttgart, 1973.
-
-2. Schwefel, Hans-Paul. Numerische Optimierung von Computer-Modellen
-   mittels der Evolutionsstrategie. Basel, Stuttgart, Birkhäuser, 1977.
