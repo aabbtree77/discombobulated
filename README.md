@@ -64,11 +64,11 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In terms of pure search (no iterative variable remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. There is no parameter overfitting. Adjust cost function evaluation budget size, sometimes the final step size multiplier epsilon value, this is it.
+In pure search (no iterative remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Adjust cost function evaluation budget size, sometimes the final step size multiplier epsilon value, this is it.
 
 One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-Regarding mixtures such as the F12 in CEC2022, these seem to be theoretically hopeless, but also optimized adequately when speaking pragmatically.
+Regarding mixtures such as the F12 in CEC2022, these are hopeless in theory, but optimized adequately when speaking pragmatically.
 
 ## Setup
 
@@ -90,7 +90,7 @@ uv pip install \
     minionpy
 ```
 
-## Best Case: BBOB-2009 F24
+## The Good: BBOB-2009 F24
 
 ```bash
 python3 test_bbob2009.py
@@ -164,7 +164,7 @@ However, to get a guaranteed convergence is not easy. For 1e7xD relative error i
 
 For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply scipy's SLSQP or BFGS if epsilon matters.
 
-lambda=1D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
+lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
 Restart only to avoid adversarial initial points. Restarting does not improve precision/convergence that much. However, it is essential. Adding bursts to sigma does not allow the algorithm to escape adversarial local optima.
 
@@ -182,7 +182,7 @@ self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 
 The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
-## Worst Case: CEC-2022 F12
+## The Bad: CEC-2022 F12
 
 ```bash
 python3 test_cec2022.py
@@ -228,4 +228,22 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900.
+Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The inability to complete optimization holds in most hybrids/composites in CEC-2017 and CEC-2022, and not only there, sadly.
+
+## The Ugly: BBOB-2009 F10
+
+"F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
+
+ES does not solve it, gets into 10^5, pushes it down to 10^2, but the progress is way too slow to ever reach fopt = -5.494000e+01.
+
+"A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number of the function divided by 100 when the condition number is larger than 100." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
+
+This is overly optimistic, in my experience. Interestingly, solid battle-tested Newton methods (scipy's SLSQP, BFGS) tend to solve the ill-conditioned section of BBOB-2009, i.e. F10 - F14, see e.g.
+
+A Global Surrogate Assisted CMA-ES by Nikolaus Hansen (GECCO 2019).
+
+One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision with smaller budgets. Sadly, this does not look to be a viable direction.
+
+Even the smartest implementations of the Newton methods face plant on BBOB-2009 F7 already (moderate ill-conditioning, but zero gradients in large portions of the search domain). They also do not solve multimodals at all. They can be really brilliant in high precision-demanding moderate-dimension unimodals **with available analytical gradients**. Thus, despite enormous research, they are rather niche, but such are ESes and CMAEs too. It is always much better to have optimization problems with available gradients.
+
+These three examples should not mislead one. This domain is very tricky and hard to improve, despite mass competitions and "winning" algorithms somewhere every year. The good part is tiny. The ugly is humongous. Ill-conditioning is a perpetually ongoing research where one big idea is to split search away from a coordinate system. There is a lot more unsolvable than solvable.
