@@ -1,12 +1,16 @@
+> «Я  
+> достаю  
+> из широких штанин  
+> дубликатом  
+> бесценного груза...»
+
 ## Derivative-Free Optimization
 
-(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D) is an underrated algorithm. It solves what the best ones solve without stability problems and overengineering. It raises the key question:
+(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D) is a very underrated algorithm. It raises the key question:
 
 **Do we need the CMAES at all?**
 
-It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such problems. However, notice that the CMAES does not solve many of them either. It adds complexity, including a dubious [CSA](https://github.com/CMA-ES/pycma/issues/130).
-
-If we ignore artificial ill-conditioned rotations, fixed budgets, epsilon targets, I still very much prefer (mu, lambda)-ES.
+It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such wildly scaled rotated ellipsoids. Consider this as its adversarial attack, nothing more. If we ignore artificial ill-conditioned rotations, fixed budgets, epsilon targets, I still very much prefer (mu, lambda)-ES.
 
 The whole (mu, lambda)-ES algorithm is literally this code:
 
@@ -60,11 +64,11 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In terms of pure search (no iterative variable remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Look into [Issue 231](https://github.com/CMA-ES/pycma/issues/231) and esp. [the CMAES sigma update rule](https://github.com/CMA-ES/pycma/blob/development/cma/sigma_adaptation.py), if you can find one.
+In terms of pure search (no iterative variable remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. There is no parameter overfitting. Adjust cost function evaluation budget size, sometimes the final step size multiplier epsilon value, this is it.
 
 One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
-Regarding mixtures such as the F12 in CEC2022, these seem to be theoretically hopeless, or optimized adequately, pragmatically speaking.
+Regarding mixtures such as the F12 in CEC2022, these seem to be theoretically hopeless, but also optimized adequately when speaking pragmatically.
 
 ## Setup
 
@@ -158,7 +162,7 @@ Increase budget 10x, increase lambda 10x, relative error will decrease 100x!
 
 However, to get a guaranteed convergence is not easy. For 1e7xD relative error is still O(1e-5).
 
-For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply BOBYQA if epsilon matters.
+For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply scipy's SLSQP or BFGS if epsilon matters.
 
 lambda=1D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
