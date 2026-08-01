@@ -238,12 +238,10 @@ ES does not solve it, gets into 1e5, pushes it down to 1e2, too slow to reach fo
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number of the function divided by 100 when the condition number is larger than 100." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
-Optimistically speaking.
+The proportion coefficient can be 1e4 and the ES still won't solve F10 (in 100M evals).
 
-Curiously, solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see "A Global Surrogate Assisted CMA-ES" by Nikolaus Hansen (GECCO 2019).
+Solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see "A Global Surrogate Assisted CMA-ES" by Nikolaus Hansen (GECCO 2019).
 
 One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision, but this is not viable.
 
-Even the smartest implementations of Newton methods face plant already on BBOB-2009 F7 (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not solve multimodals at all. Frankly they are not good without **analytical gradients**.
-
-The DFO domain is very tricky. Despite "winning algorithms" and new acronyms popping up every day, there are no winners here, only losers. The good part is tiny. The ugly is humongous. There is a lot more unsolvable than solvable.
+Even the smartest implementations of Newton methods face plant already on BBOB-2009 F7 (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not help on multimodals even with heavy restarts. Frankly they are not good without **analytical gradients**.
