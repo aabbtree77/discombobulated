@@ -64,9 +64,9 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In pure search (no iterative remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES is on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Adjust cost function evaluation budget size, sometimes the final step size multiplier epsilon value, this is it.
+In pure search (no iterative remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES can even be on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Adjust the cost function evaluation budget size, sometimes the final step size multiplier's epsilon value, this is it.
 
-One key solvable case is a wiggly function with a weak global trend such as a rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
+One key solvable tough case is the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
 Regarding mixtures such as the F12 in CEC2022, these are hopeless in theory, but optimized adequately when speaking pragmatically.
 
@@ -228,23 +228,22 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The inability to complete optimization holds in most hybrids/composites in CEC-2017 and CEC-2022, and not only there, sadly.
+Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The same story with all the hybrids/composites in CEC-2017 and CEC-2022, and not only with them, for any existing algorithm.
 
 ## The Ugly: BBOB-2009 F10
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-ES does not solve it, gets into 10^5, pushes it down to 10^2, but the progress is way too slow to ever reach fopt = -5.494000e+01.
+ES does not solve it, gets into 1e5, pushes it down to 1e2, too slow to reach fopt = -5.494000e+01.
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number of the function divided by 100 when the condition number is larger than 100." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
-This is overly optimistic, in my experience. Interestingly, solid battle-tested Newton methods (scipy's SLSQP, BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see
+Optimistically speaking.
 
-A Global Surrogate Assisted CMA-ES by Nikolaus Hansen (GECCO 2019).
+Curiously, solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see "A Global Surrogate Assisted CMA-ES" by Nikolaus Hansen (GECCO 2019).
 
-One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision with smaller budgets. Sadly, this does not look to be viable.
+One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision, but this is not viable.
 
-Even the smartest implementations of Newton methods face plant on BBOB-2009 F7 already (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not solve multimodals at all. Frankly they are not good without **analytical gradients**.
+Even the smartest implementations of Newton methods face plant already on BBOB-2009 F7 (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not solve multimodals at all. Frankly they are not good without **analytical gradients**.
 
-These three examples should not mislead one. This domain is very tricky and hard to improve, despite mass competitions and "winning" algorithms somewhere every year. The good part is tiny. The ugly is humongous. Ill-conditioning is an ongoing research.
-There is a lot more unsolvable than solvable.
+The DFO domain is very tricky. Despite "winning algorithms" and new acronyms popping up every day, there are no winners here, only losers. The good part is tiny. The ugly is humongous. There is a lot more unsolvable than solvable.
