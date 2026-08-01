@@ -238,12 +238,13 @@ ES does not solve it, gets into 10^5, pushes it down to 10^2, but the progress i
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number of the function divided by 100 when the condition number is larger than 100." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
-This is overly optimistic, in my experience. Interestingly, solid battle-tested Newton methods (scipy's SLSQP, BFGS) tend to solve the ill-conditioned section of BBOB-2009, i.e. F10 - F14, see e.g.
+This is overly optimistic, in my experience. Interestingly, solid battle-tested Newton methods (scipy's SLSQP, BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see
 
 A Global Surrogate Assisted CMA-ES by Nikolaus Hansen (GECCO 2019).
 
-One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision with smaller budgets. Sadly, this does not look to be a viable direction.
+One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision with smaller budgets. Sadly, this does not look to be viable.
 
-Even the smartest implementations of the Newton methods face plant on BBOB-2009 F7 already (moderate ill-conditioning, but zero gradients in large portions of the search domain). They also do not solve multimodals at all. They can be really brilliant in high precision-demanding moderate-dimension unimodals **with available analytical gradients**. Thus, despite enormous research, they are rather niche, but such are ESes and CMAEs too. It is always much better to have optimization problems with available gradients.
+Even the smartest implementations of Newton methods face plant on BBOB-2009 F7 already (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not solve multimodals at all. Frankly they are not good without **analytical gradients**.
 
-These three examples should not mislead one. This domain is very tricky and hard to improve, despite mass competitions and "winning" algorithms somewhere every year. The good part is tiny. The ugly is humongous. Ill-conditioning is a perpetually ongoing research where one big idea is to split search away from a coordinate system. There is a lot more unsolvable than solvable.
+These three examples should not mislead one. This domain is very tricky and hard to improve, despite mass competitions and "winning" algorithms somewhere every year. The good part is tiny. The ugly is humongous. Ill-conditioning is an ongoing research.
+There is a lot more unsolvable than solvable.
