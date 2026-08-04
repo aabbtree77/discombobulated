@@ -245,3 +245,21 @@ Solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill
 One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision, but this is not viable.
 
 Even the smartest implementations of Newton methods face plant already on BBOB-2009 F7 (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not help on multimodals even with heavy restarts. Frankly they are not good without **analytical gradients**.
+
+## Conclusion
+
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11) I am convinced that the complexity of BIPOP-aCMAES or ARRDE is justified. These are much stronger algorithms. The ES solves a tough F24 BBOB-2009, but falters already on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Endless simplifications out there also do not work as portrayed.
+
+Regarding the two, BIPOP-aCMAES or the ARRDE, I am now slightly on the latter side as it solves F24 CEC-2017 completely, while somewhat screwing up F24 BBOB-2009. I believe it is easier to improve the performance of the ARRDE on BBOB-2009 than BIPOP-aCMAES on CEC-2017, but both are very capable, and BBOB-2009/Hansen related works remain a powerful instrument to study DFO algorithms.
+
+The ARRDE is somewhat more linear and stable, but also way more evaluation-hungry, so anything below max(1e7xD, 200M) evals is BIPOP-aCMAES for me, but above that, I would take the ARRDE.
+
+## References
+
+Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4)
+
+[Minion (github)](https://github.com/khoirulmuzakka/Minion)
+
+Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document)
+
+[pycma (github)](https://github.com/CMA-ES/pycma)
