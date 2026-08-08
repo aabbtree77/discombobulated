@@ -234,25 +234,23 @@ Most of the state of the art is here around 10% relative error. I have not seen 
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-ES does not solve it, gets into 1e5, pushes it down to 1e2, too slow to reach fopt = -5.494000e+01.
+The ES is very bad when ill-conditioning takes place. It still solves these problems, but one needs to increase the budget 1000x, say to a billion of evals.
 
-"A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number of the function divided by 100 when the condition number is larger than 100." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
+"A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number..." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
-The proportion coefficient can be 1e4 and the ES still won't solve F10 (in 100M evals).
+The actual proportion coefficient can be as big as the condition number.
 
 Solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill-conditioned section of BBOB-2009 F10 - F14, see "A Global Surrogate Assisted CMA-ES" by Nikolaus Hansen (GECCO 2019).
 
-One may fancy ideas to combine Newton with ESes, to cope with ill-conditioning, to acquire more precision, but this is not viable.
-
-Even the smartest implementations of Newton methods face plant already on BBOB-2009 F7 (moderate ill-conditioning, but zero gradients in large portions of the domain). They do not help on multimodals even with heavy restarts. Frankly they are not good without **analytical gradients**.
+It is possible to combine Newton with the ES. In my (unreported) runs this speeds up the ES 10-100x, which is still behind the state of the art by a factor of 10. The combo does not lead to a breakthrough on F24 CEC-2017.
 
 ## Conclusion
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that the complexity of BIPOP-aCMAES or ARRDE is justified. These are much stronger algorithms. The ES solves a tough F24 BBOB-2009, but falters already on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Endless simplifications out there also do not work as portrayed.
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that the complexity of BIPOP-aCMAES or ARRDE is justified. These are much stronger algorithms. The ES solves a tough F24 BBOB-2009, but falters already on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Endless simplifications around the "CMA" part of the "CMAES" also suffer from ill-conditioning, just less severely than the ES, but they won't match the CMAES proper.
 
-Regarding the two, BIPOP-aCMAES or the ARRDE, I am now slightly on the latter side as it solves F24 CEC-2017 completely, while somewhat screwing up F24 BBOB-2009. I believe it is easier to improve the performance of the ARRDE on BBOB-2009 than BIPOP-aCMAES on CEC-2017, but both are very capable, and BBOB-2009/Hansen's works remain a powerful instrument to study DFO algorithms.
+Regarding the two, BIPOP-aCMAES or the ARRDE, I am now on the latter side as it solves F24 CEC-2017 completely, while somewhat screwing up F24 BBOB-2009. I believe it is easier to improve the performance of the ARRDE on BBOB-2009 than BIPOP-aCMAES on CEC-2017, but both are very capable, and BBOB-2009/Hansen's works remain a powerful instrument to study DFO algorithms.
 
-The ARRDE is somewhat more linear and stable, solves ill-conditioning without matrices, but it is often 10x more evaluation-hungry. Anything below max(1e7xD, 200M) evals is BIPOP-aCMAES for me, but above that, I would take the ARRDE.
+The ARRDE is somewhat more linear and stable, solves ill-conditioning without matrices, but it is often 10x more evaluation-hungry. Anything below max(1e7xD, 200M) evals is BIPOP-aCMAES for me, but above that, I would recommend the ARRDE.
 
 ## References
 
