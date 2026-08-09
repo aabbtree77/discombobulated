@@ -244,13 +244,19 @@ Solid implementations of Newton methods (scipy SLSQP/BFGS) tend to solve the ill
 
 It is possible to combine Newton with the ES. In my (unreported) runs this speeds up the ES 10-100x, which is still behind the state of the art by a factor of 10. The combo does not lead to a breakthrough on F24 CEC-2017.
 
-## Conclusion
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that the complexity of BIPOP-aCMAES or ARRDE is justified. These are much stronger algorithms.
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that the complexity of BIPOP-aCMAES or ARRDE is justified. These are much stronger algorithms. The ES solves a tough F24 BBOB-2009, but falters already on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Endless simplifications around the "CMA" part of the "CMAES" also suffer from ill-conditioning, just less severely than the ES, but they won't match the CMAES proper.
+## Conclusions
 
-Regarding the two, BIPOP-aCMAES or the ARRDE, I am now on the latter side as it solves F24 CEC-2017 completely, while somewhat screwing up F24 BBOB-2009. I believe it is easier to improve the performance of the ARRDE on BBOB-2009 than BIPOP-aCMAES on CEC-2017, but both are very capable, and BBOB-2009/Hansen's works remain a powerful instrument to study DFO algorithms.
+- ES: solves a tough F24 BBOB-2009, but falters on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Stays above 2800s on F24 CEC-2017 in D=20, while BIPOP-aCMAES and RCMAES reach 2500; ARRDE solves it completely with the value 2400.
 
-The ARRDE is somewhat more linear and stable, solves ill-conditioning without matrices, but it is often 10x more evaluation-hungry. Anything below max(1e7xD, 200M) evals is BIPOP-aCMAES for me, but above that, I would recommend the ARRDE.
+- CMAESes: BIPOP-aCMAES and RCMAES are roughly equal, BIPOP-aCMAES faster on F24 CEC-2017 and it is the most tested optimization algorithm on the planet, hence preferrable. Endless simplifications around the "CMA" part of the "CMAES" suffer from ill-conditioning, less severely than the ES, but they won't match the CMAES proper.
+
+- ARRDE: a clear winner, but demands a lot of evaluations. Oddly, it did not find the global optimum in F24 BBOB-2009 in D=40 under 100M evals while the ES reached that in 400K-10M evals. The ARRDE solves F24 CEC-2017 in 200M evals, 100M is not enough. Also on F25 CEC-2017 it reaches 2800 while BIPOP-aCMAES and RCMAES do not go below 2910. F25-F30 CEC-2017 look hopeless in reaching the global optimum (for F25 fopt = 2500) with any algorithm in less than 1B evals. One never knows what happens to the ARRDE beyond this budget.
+
+Regarding the two, BIPOP-aCMAES or the ARRDE, I am now on the latter side as it solves F24 CEC-2017 D=20 completely, while somewhat messing up F24 BBOB-2009 D=40. I believe it is easier to improve the performance of the ARRDE on BBOB-2009 D=40 than BIPOP-aCMAES on CEC-2017 D=20. BBOB-2009/Hansen's works remain a powerful instrument to study DFO algorithms.
+
+The ARRDE solves ill-conditioning without matrices, but its superpower gets revealed only above 200M evals in D=20 (1e7xD). At smaller budgets, BIPOP-aCMAES is often much faster.
 
 ## References
 
