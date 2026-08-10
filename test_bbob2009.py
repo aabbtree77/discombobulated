@@ -14,9 +14,10 @@ from problems import make_bbob2009
 # SEED is for reproducibility.
 # Restart to get the best results.
 
-SEED = 20260723
+#SEED = 20260723
+SEED = 20250306
 
-FUNCTION = 24
+FUNCTION = 10
 DIMENSION = 40
 # Note: BBOB2009 and CECs have very limited dimension sets, one cannot use arbitrary
 # values. These benchmarks use C++ code which builds rotation matrices to mangle cost funcs
@@ -29,12 +30,12 @@ PROGRESS_EVERY = 100_000
 #Default lambda is 100D, set it with None or use a number:
 LAMBDA = None
 
-INIT_AT_ZERO = False
+INIT_AT_ZERO = True
 
 USE_MANUAL_SIGMA = False
 MANUAL_SIGMA = 0.1
 
-LOGFILE = "progress_bbob2009_f24.csv"
+LOGFILE = "progress_bbob2009_f10.csv"
 
 # ============================================================
 
