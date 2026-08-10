@@ -6,11 +6,9 @@
 
 ## In Search of the Best Derivative-Free Optimization Algorithm
 
-(mu, lambda)-ES (or just the ES in what follows) with an exponentially decaying step size is an underrated algorithm. It raises the key question:
+The first question is: **do we need CMAESes/DEs at all?**
 
-**Do we need the CMAES/DEs at all?**
-
-It turns out, the CMA part in the CMAES is needed to solve badly scaled and mixed variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES algorithm is literally this code:
+It turns out, the CMA part in the CMAES is needed to solve badly scaled and mixed variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -62,7 +60,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-Believe it or not, this solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
+Believe it or not, the code solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
 ## Setup
 
@@ -234,7 +232,7 @@ The ES is very bad when ill-conditioning takes place. It still solves these prob
 
 That number can be proprotional to the condition number squared... The ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger algorithms.
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger algorithms than the ES.
 
 ## Summary
 
