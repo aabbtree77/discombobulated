@@ -4,15 +4,13 @@
 > дубликатом  
 > бесценного груза...»
 
-## Derivative-Free Optimization
+## In Search of the Best Derivative-Free Optimization Algorithm
 
-(mu, lambda)-ES with an exponentially decaying step size and a larger lambda (10D..100D) is a very underrated algorithm. It raises the key question:
+(mu, lambda)-ES (or just the ES in what follows) with an exponentially decaying step size is an underrated algorithm. It raises the key question:
 
-**Do we need the CMAES at all?**
+**Do we need the CMAES/DEs at all?**
 
-It turns out, the CMA part in the CMAES is needed to solve badly scaled variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). (mu, lambda)-ES completely fails on such wildly scaled rotated ellipsoids. Consider this as its adversarial attack, nothing more. If we ignore artificial ill-conditioned rotations, fixed budgets, epsilon targets, I still very much prefer (mu, lambda)-ES.
-
-The whole (mu, lambda)-ES algorithm is literally this code:
+It turns out, the CMA part in the CMAES is needed to solve badly scaled and mixed variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES algorithm is literally this code:
 
 ```python
 import numpy as np
@@ -64,11 +62,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-In pure search (no iterative remappings to solve ill-conditioning), (mu=lambda/2, lambda=100D)-ES can even be on par with BIPOP-aCMAES. It won't solve new problems magically, but it removes so much complexity. Adjust the cost function evaluation budget size, sometimes the final step size multiplier's epsilon value, this is it.
-
-One key solvable tough case is the rotated Lunacek bi-Rastrigin (BBOB-2009 F24). This is where all the Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
-
-Regarding mixtures such as the F12 in CEC2022, these are hopeless in theory, but optimized adequately when speaking pragmatically.
+Believe it or not, this solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
 
 ## Setup
 
@@ -90,7 +84,7 @@ uv pip install \
     minionpy
 ```
 
-## The Good: BBOB-2009 F24
+## The Good: F24 BBOB-2009
 
 ```bash
 python3 test_bbob2009.py
@@ -182,7 +176,7 @@ self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 
 The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
-## The Bad: CEC-2022 F12
+## The Bad: F12 CEC-2022
 
 ```bash
 python3 test_cec2022.py
@@ -228,9 +222,9 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The same story with all the hybrids/composites in CEC-2017 and CEC-2022, and not only with them, for any existing algorithm.
+Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The same story with most of the hybrids/composites in CEC-2017 and CEC-2022, and not only with them.
 
-## The Ugly: BBOB-2009 F10
+## The Ugly: F10 BBOB-2009
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
@@ -242,21 +236,29 @@ That number can be proprotional to the condition number squared... The ES reache
 
 After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger algorithms.
 
-## Conclusions
+## Summary
 
-- ES: rapidly solves a tough F24 BBOB-2009, but is too slow already on a rotated ill-conditioned ellipsoid F10 BBOB-2009. Stays above 2800s on F24 CEC-2017 in D=20, while BIPOP-aCMAES and RCMAES reach 2500; ARRDE solves it completely with the value 2400.
+```markdown
+| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017 |
+| ------------ | ------------- | ------------- | ------------ |
+| ES           | >1B           | <10M          | f=2800       |
+| BIPOP-aCMAES | <100K         | <50M          | f=2500       |
+| ARRDE        | <100K         | >200M         | f=2400       |
+```
 
-- CMAES: BIPOP-aCMAES and RCMAES are roughly equal. BIPOP-aCMAES is faster on F24 CEC-2017 and it is the most tested optimization algorithm on the planet, hence preferable. Endless simplifications around the "CMA" part of the "CMAES" still suffer from ill-conditioning (less severely than the ES, may become restart-sensitive). The simplifications may lead to the step size blowup when used with bigger lambdas, and they do not match the CMAES proper, contrary to the claims.
+- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100).
 
-- ARRDE: a clear winner, but demands a lot of evaluations. It requires more than 200M evals to solve F24 BBOB-2009 in D=40, while the ES does that in just 400K-10M evals. The ARRDE completely solves (!) F24 CEC-2017 in 200M evals. On F25 CEC-2017 it reaches 2800, while BIPOP-aCMAES and RCMAES do not go below 2910. F25-F30 CEC-2017 look hopeless in reaching the global optimum (for F25 fopt = 2500) with any algorithm in less than 1B evals, but one never knows what happens to the ARRDE beyond this budget though.
+- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017.
 
-Notably, the ARRDE solves ill-conditioning without matrices, but its superpowers get revealed only above 200M evals in D=20 (1e7xD). At smaller budgets, bigger dimensions (>10), BIPOP-aCMAES is often much better.
+- ARRDE: a clear winner, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017.
 
-For mild conditioning (~100), the ES works surprisingly well (!) and it is the simplest algorithm which can solve tough multimodals such as F24 BBOB-2009 or zero gradients such as F7 BBOB-2009. If the sought variables are of the same scale, the target relative error is pragmatic 10%..1%, and it is not critical whether the evaluation budget is 1M or 10M, the ES is the method to use. It will allow one to avoid extra dependencies, C++, complexity, will get one 80% of results with 20% effort.
+Notably, the ARRDE solves ill-conditioning without matrices, just like the RDEx-SOP.
 
 ## References
 
 Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
+
+Sichen Tao et al. (2026) [RDEx-SOP: Exploitation-Biased Reconstructed Differential Evolution for Fixed-Budget Bound-Constrained Single-Objective Optimization](https://arxiv.org/abs/2603.27089)
 
 Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
 
