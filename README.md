@@ -246,17 +246,19 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 
 - ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100).
 
-- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017.
+- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017. BIPOP-aCMAES is still the best practical choice for anything black-box automated.
 
-- ARRDE: a clear winner, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017 (but still better than CMAESes on F25). Notably, the ARRDE deals with ill-conditioning without matrices.
-
-There is another differential evolution called RDEx-SOP. It is slightly worse than the ARRDE. It solves F10 BBOB-2009 similarly and very rapidly, but one will not get anything interesting (better than CMAESes) on harder problems below 1e7xD evals.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017 (but still better than CMAESes on the F25). Notably, the ARRDE sustains ill-conditioning without matrices.
 
 ## References
 
 Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
 Sichen Tao et al. (2026) [RDEx-SOP: Exploitation-Biased Reconstructed Differential Evolution for Fixed-Budget Bound-Constrained Single-Objective Optimization](https://arxiv.org/abs/2603.27089)
+
+Dikshit Chauhan (2026) [DE-2LS: Differential Evolution with Late-Stage local-search for Unconstrained Single-Objective Numerical Optimization](https://arxiv.org/abs/2606.27762)
+
+Dikshant et al. (2026) [RDEx-CASK: Cauchy Mutation, Archive, and Stagnation Kick for RDEx-CSOP](https://arxiv.org/abs/2605.09652)
 
 Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
 
