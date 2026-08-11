@@ -8,7 +8,7 @@
 
 The first question is: **do we need CMAESes/DEs at all?**
 
-It turns out, the CMA part in the CMAES is needed to solve badly scaled and mixed variables (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
+It turns out, the CMA part in the CMAES is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -60,7 +60,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-Believe it or not, the code solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including the "multimodal" ones such as the MCS and Nomad.
+Believe it or not, the code solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including some big and complex "multimodal" ones such as the MCS and Nomad.
 
 ## Setup
 
@@ -154,11 +154,11 @@ Increase budget 10x, increase lambda 10x, relative error will decrease 100x!
 
 However, to get a guaranteed convergence is not easy. For 1e7xD relative error is still O(1e-5).
 
-For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply scipy's SLSQP or BFGS if epsilon matters.
+For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and budget by the same factor. However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply scipy's SLSQP/BFGS if epsilon matters.
 
 lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
-Restart only to avoid adversarial initial points. Restarting does not improve precision/convergence that much. However, it is essential. Adding bursts to sigma does not allow the algorithm to escape adversarial local optima.
+Restart to avoid adversarial initial points. Restarting does not improve precision/convergence that much. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead to the optimum in this problem. Adding bursts to sigma does not improve anything.
 
 Normality is not essential, but other distributions do not improve optmization. One can reach relative error O(1e-5) with
 
@@ -232,7 +232,7 @@ The ES is very bad when ill-conditioning takes place. It still solves these prob
 
 That number can be proprotional to the condition number squared... The ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger algorithms than the ES.
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger black boxes than the ES.
 
 ## Summary
 
@@ -240,17 +240,17 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 | Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017 |
 | ------------ | ------------- | ------------- | ------------ |
 | ES           | >1B           | <10M          | f=2800       |
-| BIPOP-aCMAES | <100K         | <50M          | f=2500       |
-| ARRDE        | <100K         | >200M         | f=2400       |
+| BIPOP-aCMAES | <50K          | <1M           | f=2500       |
+| ARRDE        | <500K         | >200M         | f=2400       |
 ```
 
 - ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100).
 
 - BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017.
 
-- ARRDE: a clear winner, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017.
+- ARRDE: a clear winner, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017 (but still better than CMAESes on F25). Notably, the ARRDE deals with ill-conditioning without matrices.
 
-Notably, the ARRDE solves ill-conditioning without matrices, just like the RDEx-SOP.
+There is another differential evolution called RDEx-SOP. It is slightly worse than the ARRDE. It solves F10 BBOB-2009 similarly and very rapidly, but one will not get anything interesting (better than CMAESes) on harder problems below 1e7xD evals.
 
 ## References
 
