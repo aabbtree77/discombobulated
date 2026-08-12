@@ -250,6 +250,18 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves (!) F24 CEC-2017 in 200M evals, yet face-plants already on F25 CEC-2017 (but still better than CMAESes on the F25). Notably, the ARRDE sustains ill-conditioning without matrices.
 
+## P.S.
+
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins. However, limitations such as F10 BBOB-2009 emerged, and it was natural to look for something more clever.
+
+The ES leads to BIPOP-aCMAES more or less, which itself hits its limits on F24 - F30 CEC-2017 and feels done.
+
+DEs are all the rage, but there is no math there. Pure slow experimental grinding. I am still not sure F24 CEC-2017 is worth all the suffering.
+
+One gets bored with matrices and calculus, but they are succinct, and one can still do everything very efficiently in Python. On the other hand, properly mixed variables without a nice coordinate system to unrotate (like F24 - F30 on CEC-2017) and all this elegance falls apart like a house of cards. It is a Disneyland with lemma/corollary crapola.
+
+Disneyland vs grinding.
+
 ## References
 
 Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
@@ -260,20 +272,26 @@ Dikshit Chauhan (2026) [DE-2LS: Differential Evolution with Late-Stage local-sea
 
 Dikshant et al. (2026) [RDEx-CASK: Cauchy Mutation, Archive, and Stagnation Kick for RDEx-CSOP](https://arxiv.org/abs/2605.09652)
 
-Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
+Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
+Large Language Models](https://arxiv.org/abs/2407.08331)
 
-Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
+Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
+Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
 
-Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
-BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
+Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
+objectives on the bbob and bbob-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
 
 Ryoji Tanabe (2022) [Benchmarking the Hooke-Jeeves Method, MTS-LS1, and BSrr on
 the Large-scale BBOB Function Set](https://arxiv.org/abs/2204.13284)
 
 Ryoji Tanabe and Alex Fukunaga (2020) [How Far Are We From an Optimal, Adaptive DE?](https://arxiv.org/abs/2010.01032)
 
+Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
+
+Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
+
 Konstantinos Varelas (2019) [Benchmarking Large Scale Variants of CMA-ES and L-BFGS-B
 on the bbob-largescale Testbed](https://inria.hal.science/hal-02160106/file/wksp213s2-file1.pdf)
 
-Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
-objectives on the bbob and bbob-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
+Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
+BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
