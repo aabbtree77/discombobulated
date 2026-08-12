@@ -6,7 +6,7 @@
 
 ## In Search of the Best Derivative-Free Optimization Algorithm
 
-The first question is: **do we need CMAESes/DEs at all?**
+Do we need complex modern CMAESes/DEs?
 
 It turns out, the CMA part in the CMAES is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
@@ -272,22 +272,30 @@ Ryoji Tanabe and Alex Fukunaga (2020) [How Far Are We From an Optimal, Adaptive 
 
 ### Some CMAES Papers
 
-LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking outside equations:
+- LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking outside equations:
 
-Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
-Large Language Models](https://arxiv.org/abs/2407.08331)
+  Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
+  Large Language Models](https://arxiv.org/abs/2407.08331)
 
-Some theory indicating that the population size in the ES should be O(sqrt(D)xlog(D)):
+- Some theory indicating that the population size in the ES should be O(sqrt(D)xlog(D)):
 
-Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
-Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
+  Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
+  Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
 
-I am not sure what to think of simplifications such as:
+- Simplifications exist, but I would not recommend them, e.g.
 
-Zhenhua Li and Qingfu Zhang (2017) [A Simple Yet Efficient Rank One Update for Covariance
-Matrix Adaptation](https://arxiv.org/abs/1710.03996)
+  Zhenhua Li and Qingfu Zhang (2017) [A Simple Yet Efficient Rank One Update for Covariance
+  Matrix Adaptation](https://arxiv.org/abs/1710.03996)
 
-See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA rule according to pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231). The problem is, for any such simplification, everything starts anew. One needs a more thorough scrutiny of what happens w.r.t. increasing lambda, initial step sizes, starting points, restarts. One must test every BBOB-2009 function at very least, and there will be endless different edge cases and further adjustments. Without them, a simplification won't match pycma. This is why I am not into Minion's RCMAES.
+  See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA rule according to pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
+
+  The problem is, for any such simplification, everything starts anew. One needs a thorough scrutiny of what happens w.r.t. increasing lambda, varying initial step sizes, starting points, CSA, boundary handling. One must test every BBOB-2009 function at very least, and there will be endless different edge cases and further adjustments needed. Without them, a simplification won't match pycma. This is why I am not into Minion's RCMAES.
+
+  In particular, it turns out that the rank one algorithm is very sensitive w.r.t. starting points and requires tiny initial step sizes such as 0.3..0.1 to work at all on F10 BBOB-2009, while pycma is much more robust there. Without further adjustments in pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231), the optimization does not work on larger lambda values such as 10D..100D, the step sizes in the CSA rule begin to explode.
+
+  It is tempting to apply the exponential decay schedule used for sigma in the ES on F24 BBOB-2009, but that is not so simply transferable and the final value of the sigma multipler, whether it's 1e-3 or 1e-6 starts to make a huge difference.
+
+  None of this is valuable as we simply lose years of testing and tuning present in pycma.
 
 ### Useful Data
 
