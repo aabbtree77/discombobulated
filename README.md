@@ -252,13 +252,13 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins.
+I got sidetracked. The main idea was just to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions.
 
 ## References
 
 ### Some Newest DEs
 
-I did not get much from RDEx-SOP, but ARRDE is outstanding on larger budgets.
+ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP, but it is designed for tiny CEC-2025 budgets (2e4xD evals). There already exist some efforts to add restarts and turn it into a proper method. There are others...
 
 Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
@@ -272,24 +272,22 @@ Ryoji Tanabe and Alex Fukunaga (2020) [How Far Are We From an Optimal, Adaptive 
 
 ### Some CMAES Papers
 
-LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking:
+LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking outside equations:
 
 Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
 Large Language Models](https://arxiv.org/abs/2407.08331)
 
-Some theory indicating that the population size in the ES should be O(sqrt(D) log(D)). I believe more in (10..100)xD.
+Some theory indicating that the population size in the ES should be O(sqrt(D)xlog(D)):
 
 Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
 Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
 
-My preference in the whole CMAES family:
+I am not sure what to think of simplifications such as:
 
 Zhenhua Li and Qingfu Zhang (2017) [A Simple Yet Efficient Rank One Update for Covariance
 Matrix Adaptation](https://arxiv.org/abs/1710.03996)
 
-Wrap it inside a few restarts for a fixed bigger lambda value (10..100)xD, and adjust the CSA rule according to pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231). See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for a start.
-
-This won't solve F24 CEC-2017 and epsilons, but it is a very grokkable and pragmatic DFO/BO platform.
+See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA rule according to pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231). The problem is, for any such simplification, everything starts anew. One needs a more thorough scrutiny of what happens w.r.t. increasing lambda, initial step sizes, starting points, restarts. One must test every BBOB-2009 function at very least, and there will be endless different edge cases and further adjustments. Without them, a simplification won't match pycma. This is why I am not into Minion's RCMAES.
 
 ### Useful Data
 
