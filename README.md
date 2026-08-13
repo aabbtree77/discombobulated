@@ -289,13 +289,17 @@ ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA rule according to pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-  The problem is, for any such simplification, everything starts anew. One needs a thorough scrutiny of what happens w.r.t. increasing lambda, varying initial step sizes, starting points, CSA, boundary handling. One must test every BBOB-2009 function at very least, and there will be endless different edge cases and further adjustments needed. Without them, a simplification won't match pycma. This is why I am not into Minion's RCMAES.
+  The problem is, for any such simplification, everything starts anew. For instance, the rank one algorithm is too sensitive/unreliable w.r.t. starting points and initial step sizes on F10 BBOB-2009, while pycma has no trouble here. The rank one update also does not work with larger lambdas as its simplistic CSA blows up the step sizes.
 
-  In particular, it turns out that the rank one algorithm is very sensitive w.r.t. starting points and requires tiny initial step sizes such as 0.3..0.1 to work at all on F10 BBOB-2009, while pycma is much more robust there. Without further adjustments in pycma's [Issue 231](https://github.com/CMA-ES/pycma/issues/231), the optimization does not work on larger lambda values such as 10D..100D, the step sizes in the CSA rule begin to explode.
+  None of this is valuable as we simply lose years of testing and tuning present in pycma. This is why I would also not recommend any custom implementation of CMAESes including the ones by [Minion](https://github.com/khoirulmuzakka/Minion).
 
-  It is tempting to apply the exponential decay schedule used for sigma in the ES on F24 BBOB-2009, but that is not so simply transferable and the final value of the sigma multipler, whether it's 1e-3 or 1e-6 starts to make a huge difference.
+  Consider F10 and F24 in BBOB-2009. These are two vastly different problems which pycma solves outstandingly well. No algorithm in the world will work well in both of the domains if the authors are not aware of such a dichotomy and have not tested their algorithm on these two specifically.
 
-  None of this is valuable as we simply lose years of testing and tuning present in pycma.
+  F10 wants fewer iterations, but the right ones, it is a Newton/matrix territory. It does not want sampling/biology, bigger lambdas are detrimental.
+
+  F24 is the opposite and smokes any Newton. It is an archetypical case for ESes, but a full CMAES with CSA is kind of irrelevant there. ES: start somewhere, sample for better directions, take a leap with a big step size in an averaged better direction. Continue doing that with an exponentially shrinking step size so that it is nearly zero by the end of the budget. Divide budget for a few restarts beforehand. This is brilliant on F24, but it does not work on F10 at all.
+
+  pycma manages to do both with its own very fine precision instruments "CMA" and "CSA" which are no longer what is on wiki and are dangerous to simplify. Any simplification should at least be tested on each BBOB-2009 function one by one, with different step sizes, initial points, lambdas. Merely averaging over the whole BBOB-2009 suite a few random runs does not reveal damages and weaknesses introduced by simplification.
 
 ### Useful Data
 
