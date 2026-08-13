@@ -237,16 +237,16 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 ## Summary
 
 ```markdown
-| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017 |
-| ------------ | ------------- | ------------- | ------------ |
-| ES           | >1B           | <10M          | f=2800       |
-| BIPOP-aCMAES | <50K          | <1M           | f=2500       |
-| ARRDE        | <500K         | >200M         | f=2400       |
+| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   |
+| ------------ | ------------- | ------------- | -------------- |
+| ES           | >1B           | <10M          | >200M (f=2800) |
+| BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) |
+| ARRDE        | <500K         | >200M         | >200M (f=2400) |
 ```
 
 - ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100).
 
-- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate. We also know how all this curvature stuff face-plants in deep learning.
+- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot tackle F25 CEC-2017 (but still better than CMAESes on the F25). Notably, the ARRDE sustains ill-conditioning without matrices.
 
@@ -301,9 +301,11 @@ ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP
 
   pycma manages to do both with its own very fine precision instruments "CMA" and "CSA" which are no longer what is on wiki and are dangerous to simplify. Any simplification should at least be tested on each BBOB-2009 function one by one, with different step sizes, initial points, lambdas. Merely averaging over the whole BBOB-2009 suite a few random runs does not reveal damages and weaknesses introduced by simplification.
 
-### Useful Data
+### Useful BBOB-2009 Data
 
-This saves time, no need to implement and test everything.
+These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb is that the more mathematics per algorithm paper(s), the less chance for it to be of any use. A solid code repository maintained throughout years, with semantic versioning, and long lists of improvements... still does not mean anything!
+
+- Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
 - Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
   objectives on the bbob and bbob-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
