@@ -307,15 +307,13 @@ I did not get anything from DAs on CEC2017 F24 - F30 in D=20.
 
 Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
 
-Sadly, this is only in D=10, and very suspect. I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
+I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
+
+Minion's result in D=10 is somewhat contradictory, but it depends on the starting point and D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in less than 100K evals (reaching 2600). In my run, for the zero starting point, SEED = 20260815, the ARRDE reaches 2800 in 2B evals (F26 CEC-2017 D=20).
 
 A note on memetics, e.g. the use of BFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere.
 
-Minion's result in D=10 remains somewhat contradictory, but D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) the ARRDE solves F26 CEC-2017 in D=10 in less than 100K evals, which is just too good to be true for these types of mixed multimodals, esp. in D=20.
-
-SA methods tend to have hard to-tune parameters, so the power might be there, but it is hard to reach. Anything simplistic with single point sampling (just like 1+1 in CMAES) is good only in theory. "The Algorithm Design Manual" by Steven Skiena includes basic SA codes, but this is not enough, and I fear this is also the case with DAs.
-
-In a way, CMAES is the most tuned and tested memetics.
+In a way, CMAES is the most tuned and tested memetics, the best one can do when combining Newton/curvature with stochastics.
 
 ### Some Tests on BBOB-2009
 
@@ -336,16 +334,6 @@ In a way, CMAES is the most tuned and tested memetics.
 
 - Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
   BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
-
-## General Observations
-
-- The more convergence proofs around a published algorithm, the more big names mentioned, "Newton", "Boltzmann", "Hilbert, "Bayes", "Markov"... the less chance for it to be of any use. Reports in Nature, solid code repositories maintained throughout years, with semantic versioning, and long lists of improvements, everyone mentioning and using an algorithm... still do not mean anything and will lead to a giant waste of time.
-
-- Bear in mind nobody reads anything, but bows to complexity and belief structures, esp. Nobel, Fields, C++ committees. Tests even less so. pycma is tested a lot on BBOB-2009, Minion on CEC, but I already have a lot of questions for scipy.optimize...
-
-- There is probably a theorem out there that if you want to combine Newton with stochastics, you cannot do it better than CMAES. Nobody can prove it, but it is likely to be impossible to squeeze as much from a quadric/ellipsoid in DFO as CMAES does.
-
-- Engineering beats math. Krizhevsky/Ciresan vs Bayes/Kolmogorov/Vapnik/Nesterov followers, Muzakka vs Hansen, E.T. Jaynes vs Bourbaki, [Dr. Z vs establishment](https://sites.math.rutgers.edu/~zeilberg/OPINIONS.html), github vs arXiv...
 
 ## P.S.
 
