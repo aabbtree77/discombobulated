@@ -301,6 +301,20 @@ ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP
 
   pycma manages to do both with its own very fine precision instruments "CMA" and "CSA" which are no longer what is on wiki and are dangerous to simplify. Any simplification should at least be tested on each BBOB-2009 function one by one, with different step sizes, initial points, lambdas. Merely averaging over the whole BBOB-2009 suite a few random runs does not reveal damages and weaknesses introduced by simplification.
 
+### Some Not So Useful Advances in Simulated Annealing and Memetics
+
+scipy includes an algorithm called "dual annealing" (DA) which runs LBFGS inside as a local search. Scroll down for all the references [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py). DA looks visible also in the R community where it got revived first. I did not get anything from it on CEC2017 F24 - F30 in D=20.
+
+Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two implementations of DA. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), ARRDE and the rest close only to 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
+
+Sadly, this is only in D=10, and a few runs, I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
+
+A note on memetics, e.g. the use of LBFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere, though Minion's result in D=10 remains somewhat contradictory and requiring further research here.
+
+The SA methods tend to have some fancy hard to-tune parameters, so their power is hardly completely explored, but anything simplistic with single point sampling (just like 1+1 in CMAES) is good only for theory and it won't work on anything harder at all. The Algorithm Design Manual by Steven Skiena includes the basic SA code with some temperature schedules and tests, but this is not enough to compete at the level of modern CMAESes and DEs, which I fear is also the case with DAs.
+
+In a way, CMAES is the most tuned and tested memetic algorithm family: "CMA" acts as an inverse Hessian, the algorithm matches Newton on unimodals performance wise. The problem is that uniting Newton with ES becomes such a rock solid algorithm that it becomes very hard to improve it anymore, yet it still does not solve those difficult problems in CEC-2017. The ARRDE shows more promise here.
+
 ### Useful BBOB-2009 Data
 
 These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb is that the more mathematics per algorithm paper(s), the less chance for it to be of any use. A solid code repository maintained throughout years, with semantic versioning, and long lists of improvements... still does not mean anything!
