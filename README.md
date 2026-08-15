@@ -158,7 +158,7 @@ For a fixed lambda, simply increasing budget does not lead to convergence. One n
 
 lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
-**Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead to the optimum in this problem.**
+**Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead the ES to the F24 optimum.**
 
 Normality is not essential, but other distributions do not improve optmization. One can reach relative error O(1e-5) with
 
@@ -174,7 +174,7 @@ self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 
 The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
-The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it could be critical elsewhere. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints). Obviously, this won't work universally. Adding bursts to sigma during the optimization does not improve anything.
+The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it could be critical elsewhere. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints). Obviously, this won't work universally and is already very bad on the F10 BBOB-2009. Adding bursts to the sigma during the optimization does not improve anything.
 
 ## The Bad: F12 CEC-2022
 
@@ -252,10 +252,6 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot tackle F25 CEC-2017. It still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
 
-## P.S.
-
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions.
-
 ## References
 
 ### A Few Newest DEs
@@ -305,21 +301,23 @@ The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx
 
 ### Some Not So Useful Advances in Simulated Annealing and Memetics
 
-scipy includes an algorithm called "dual annealing" (DA) which runs LBFGS inside as a local search. Scroll down for all the references [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py). DA looks visible also in the R community where it got revived first. I did not get anything from it on CEC2017 F24 - F30 in D=20.
+scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA looks visible also in the R community.
 
-Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two implementations of DA. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), ARRDE and the rest close only to 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
+I did not get anything from DAs on CEC2017 F24 - F30 in D=20.
 
-Sadly, this is only in D=10, and a few runs, I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
+Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
 
-A note on memetics, e.g. the use of LBFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere. Minion's result in D=10 remains somewhat contradictory, but D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) the ARRDE solves F26 CEC-2017 in D=10 in less than 100K evals, which is just too good to be true for these types of mixed multimodals in D=20.
+Sadly, this is only in D=10, and very suspect. I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
 
-SA methods tend to have hard to-tune parameters, so their power is not completely explored. Anything simplistic with single point sampling (just like 1+1 in CMAES) is also good only for theory and to be avoided. "The Algorithm Design Manual" by Steven Skiena includes basic SA codes, but this is not enough, and I fear this is also the case with DAs.
+A note on memetics, e.g. the use of BFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere.
 
-In a way, CMAES is the most tuned and tested memetic algorithm family: "CMA" acts as an inverse Hessian, the constants are tuned to match Newton on unimodals performance wise. It squeezes the most of Newton + ES into a single algorithm, this is a solved problem in this sense. Yet CMAESes are incapacitated on difficult problems in CEC-2017. The ARRDE is more promising.
+Minion's result in D=10 remains somewhat contradictory, but D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) the ARRDE solves F26 CEC-2017 in D=10 in less than 100K evals, which is just too good to be true for these types of mixed multimodals, esp. in D=20.
 
-### Useful BBOB-2009 Data
+SA methods tend to have hard to-tune parameters, so the power might be there, but it is hard to reach. Anything simplistic with single point sampling (just like 1+1 in CMAES) is good only in theory. "The Algorithm Design Manual" by Steven Skiena includes basic SA codes, but this is not enough, and I fear this is also the case with DAs.
 
-These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb is that the more mathematics per algorithm paper(s), the less chance for it to be of any use. Reports in Nature, a solid code repository maintained throughout years, with semantic versioning, and long lists of improvements, everyone mentioning and using an algorithm... still do not mean anything and can lead to a giant waste of time.
+In a way, CMAES is the most tuned and tested memetics.
+
+### Some Tests on BBOB-2009
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
@@ -338,3 +336,17 @@ These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb 
 
 - Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
   BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
+
+## General Observations
+
+- The more convergence proofs around a published algorithm, the more big names mentioned, "Newton", "Boltzmann", "Hilbert, "Bayes", "Markov"... the less chance for it to be of any use. Reports in Nature, solid code repositories maintained throughout years, with semantic versioning, and long lists of improvements, everyone mentioning and using an algorithm... still do not mean anything and will lead to a giant waste of time.
+
+- Bear in mind nobody reads anything, but bows to complexity and belief structures, esp. Nobel, Fields, C++ committees. Tests even less so. pycma is tested a lot on BBOB-2009, Minion on CEC, but I already have a lot of questions for scipy.optimize...
+
+- There is probably a theorem out there that if you want to combine Newton with stochastics, you cannot do it better than CMAES. Nobody can prove it, but it is likely to be impossible to squeeze as much from a quadric/ellipsoid in DFO as CMAES did.
+
+- Engineering beats math. Krizhevsky/Ciresan vs Bayes/Kolmogorov/Vapnik/Nesterov followers, Muzakka vs Hansen, E.T. Jaynes vs Bourbaki, [Dr. Z vs establishment](https://sites.math.rutgers.edu/~zeilberg/OPINIONS.html), github vs arXiv...
+
+## P.S.
+
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions. Use pycma BIPOP-aCMAES or Minion ARRDE for any DFO.
