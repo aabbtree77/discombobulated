@@ -158,7 +158,7 @@ For a fixed lambda, simply increasing budget does not lead to convergence. One n
 
 lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
-Restart to avoid adversarial initial points. Restarting does not improve precision/convergence that much. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead to the optimum in this problem. Adding bursts to sigma does not improve anything.
+**Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead to the optimum in this problem.**
 
 Normality is not essential, but other distributions do not improve optmization. One can reach relative error O(1e-5) with
 
@@ -173,6 +173,8 @@ self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 ```
 
 The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
+
+The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it could be critical elsewhere. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints). Obviously, this won't work universally. Adding bursts to sigma during the optimization does not improve anything.
 
 ## The Bad: F12 CEC-2022
 
@@ -220,7 +222,7 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is here around 10% relative error. I have not seen any algorithm to go below 2900. The same story with most of the hybrids/composites in CEC-2017 and CEC-2022, and not only with them.
+Most of the state of the art is around 10% of the relative error. I have not seen any algorithm to go below 2900. The same story with most of the hybrids/composites in CEC-2017 and CEC-2022, and not only with them.
 
 ## The Ugly: F10 BBOB-2009
 
@@ -244,21 +246,21 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 | ARRDE        | <500K         | >200M         | >200M (f=2400) |
 ```
 
-- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100).
+- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100). It is also too sensitive to starting points and the "sigma schedule" just like the simulated annealing (SA).
 
-- BIPOP-aCMAES and RCMAES are roughly equal. Both fail on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
+- BIPOP-aCMAES fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot tackle F25 CEC-2017 (but still better than CMAESes on the F25). Notably, the ARRDE sustains ill-conditioning without matrices.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot tackle F25 CEC-2017. It still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
 
 ## P.S.
 
-I got sidetracked. The main idea was just to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions.
 
 ## References
 
 ### A Few Newest DEs
 
-ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP, but it is designed for tiny CEC-2025 budgets (2e4xD evals). It already has improvements, alternatives.
+The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP, but it is designed for tiny CEC-2025 budgets (2e4xD evals). It already has improvements, alternatives.
 
 - Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
@@ -309,15 +311,15 @@ Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en
 
 Sadly, this is only in D=10, and a few runs, I was not able to get anything with DAs on F24 BBOB-2009 in D=40, and on F24 - F30 CEC-2017 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
 
-A note on memetics, e.g. the use of LBFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere, though Minion's result in D=10 remains somewhat contradictory and requiring further research here.
+A note on memetics, e.g. the use of LBFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere. Minion's result in D=10 remains somewhat contradictory or generalize to D=20.
 
-The SA methods tend to have some fancy hard to-tune parameters, so their power is hardly completely explored, but anything simplistic with single point sampling (just like 1+1 in CMAES) is good only for theory and it won't work on anything harder at all. The Algorithm Design Manual by Steven Skiena includes the basic SA code with some temperature schedules and tests, but this is not enough to compete at the level of modern CMAESes and DEs, which I fear is also the case with DAs.
+The SA methods tend to have fancy hard to-tune parameters, so their power is hardly completely explored. Anything simplistic with single point sampling (just like 1+1 in CMAES) is good only for theory and to be avoided. "The Algorithm Design Manual" by Steven Skiena includes basic SA codes, but this is not enough, and I fear this is also the case with DAs.
 
-In a way, CMAES is the most tuned and tested memetic algorithm family: "CMA" acts as an inverse Hessian, the algorithm matches Newton on unimodals performance wise. The problem is that uniting Newton with ES becomes such a rock solid algorithm that it becomes very hard to improve it anymore, yet it still does not solve those difficult problems in CEC-2017. The ARRDE shows more promise here.
+In a way, CMAES is the most tuned and tested memetic algorithm family: "CMA" acts as an inverse Hessian, the constants are tuned to match Newton on unimodals performance wise. It achieves the power of Newton + ES in a single algorithm, this is a solved problem. Yet CMAESes still do not solve those difficult problems in CEC-2017. The ARRDE is more promising.
 
 ### Useful BBOB-2009 Data
 
-These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb is that the more mathematics per algorithm paper(s), the less chance for it to be of any use. A solid code repository maintained throughout years, with semantic versioning, and long lists of improvements... still does not mean anything!
+These works benchmark a lot of algorithms on BBOB-2009. A general rule of thumb is that the more mathematics per algorithm paper(s), the less chance for it to be of any use. Reports in Nature, a solid code repository maintained throughout years, with semantic versioning, and long lists of improvements, everyone mentioning and using an algorithm... still do not mean anything and can lead to a giant waste of time.
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
