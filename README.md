@@ -343,7 +343,7 @@ In a way, CMAES is the most tuned and tested memetics.
 
 - Bear in mind nobody reads anything, but bows to complexity and belief structures, esp. Nobel, Fields, C++ committees. Tests even less so. pycma is tested a lot on BBOB-2009, Minion on CEC, but I already have a lot of questions for scipy.optimize...
 
-- There is probably a theorem out there that if you want to combine Newton with stochastics, you cannot do it better than CMAES. Nobody can prove it, but it is likely to be impossible to squeeze as much from a quadric/ellipsoid in DFO as CMAES did.
+- There is probably a theorem out there that if you want to combine Newton with stochastics, you cannot do it better than CMAES. Nobody can prove it, but it is likely to be impossible to squeeze as much from a quadric/ellipsoid in DFO as CMAES does.
 
 - Engineering beats math. Krizhevsky/Ciresan vs Bayes/Kolmogorov/Vapnik/Nesterov followers, Muzakka vs Hansen, E.T. Jaynes vs Bourbaki, [Dr. Z vs establishment](https://sites.math.rutgers.edu/~zeilberg/OPINIONS.html), github vs arXiv...
 
