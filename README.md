@@ -1,14 +1,12 @@
-> «Я  
-> достаю  
-> из широких штанин  
-> дубликатом  
-> бесценного груза...»
+<p align="center">
+  <img src="bbob2009vscec2017.png" alt="bbob2009 vs cec2017 as Venn diagrams with ill-cond vs multimodality" style="width: 90%; height: auto;" />
+</p>
 
 ## In Search of the Best Derivative-Free Optimization Algorithm
 
 Do we need complex modern CMAESes/DEs?
 
-It turns out, the CMA part in the CMAES is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
+The "CMA" part in "CMAES" is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -172,9 +170,13 @@ or even uniform distribution:
 self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 ```
 
-The parameters are not very critical, but they should be reasonable. Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
+Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
-The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it could be critical elsewhere. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints). Obviously, this won't work universally and is already very bad on the F10 BBOB-2009. Adding bursts to the sigma during the optimization does not improve anything.
+The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it is a parameter to adjust nonetheless. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints).
+
+Adding random sigma bursts during the optimization does not improve anything.
+
+Still, expect to solve a good half of the whole BBOB-2009 (if not everything except F2, F7, and F10-F14) with this ES, and it is a lot fewer parameters and more simple than cumulation and matrices in CMAES.
 
 ## The Bad: F12 CEC-2022
 
@@ -224,19 +226,31 @@ Progress saved to     : progress_cec2022_f12.csv
 
 Most of the state of the art is around 10% of the relative error. I have not seen any algorithm to go below 2900. The same story with most of the hybrids/composites in CEC-2017 and CEC-2022, and not only with them.
 
+This is actually decent. The bad part about the ES is that it might be somewhat sensitive to the starting point and initial step size, and also the sigma schedule.
+
 ## The Ugly: F10 BBOB-2009
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-The ES is very bad when ill-conditioning takes place. It still solves these problems, but one needs to increase the budget 1000x, say to a billion of evals.
+The ES is horrid when ill-conditioning takes place. It still solves these problems, but one needs to increase the budget 1000x, say to a billion of evals.
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number..." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
 That number can be proprotional to the condition number squared... The ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), I am convinced that BIPOP-aCMAES/ARRDE complexity is justified. These are much stronger black boxes than the ES.
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to BIPOP-aCMAES or ARRDE.
 
-## Summary
+## The Rules of the Game
+
+In derivative free optimization (DFO) there emerge two primary challenges: multimodality and ill-conditioning. The first one is handled well with stochastic sampling such as the ES, the second - with Newton methods.
+
+The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
+
+CEC-2017 is a bigger challenge as there are a lot of functions which are both, multimodal and ill-contioned. The trouble here is that except for F22 and F27, most of these ill-conditioned multimodals are beyond the reach of any known method if we require an optimizer to get close to the global optimum with say 1% relative error in 1B evals.
+
+Still, there are some cost functions which allow to differentiate various algorithms without a tediously slow massive testing.
+
+I propose the following benchmark:
 
 ```markdown
 | Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   |
@@ -246,13 +260,17 @@ After some more thorough testing, see [Minion Issue 11](https://github.com/khoir
 | ARRDE        | <500K         | >200M         | >200M (f=2400) |
 ```
 
-- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals and zero gradients such as F7 BBOB-2009. Sadly, works only with mild condition numbers (~100). It is also too sensitive to starting points and the "sigma schedule" just like the simulated annealing (SA).
+One could add F7 BBOB-2009 to make it very unfriendly for Newton/gradient methods, but let us assume these cost functions are too rare.
 
-- BIPOP-aCMAES fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
+The three functions above reveal a lot:
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot tackle F25 CEC-2017. It still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
+- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals. Sadly, works only with mild condition numbers (up to ~1000, would solve F18 BBOB-2009). It is somewhat sensitive w.r.t. starting points and the "sigma schedule", but does so much with so little. Very fast even in Python, no dependencies, predictable behavior.
 
-## References
+- BIPOP-aCMAES (pycma CMAES), a brilliant most tested optimization algorithm on the planet, very frugal when it works, but fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate. The state of the art.
+
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
+
+## Anything Better Out There?
 
 ### A Few Newest DEs
 
@@ -299,7 +317,7 @@ The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx
 
   pycma manages to do both with its own very fine precision instruments "CMA" and "CSA" which are no longer what is on wiki and are dangerous to simplify. Any simplification should at least be tested on each BBOB-2009 function one by one, with different step sizes, initial points, lambdas. Merely averaging over the whole BBOB-2009 suite a few random runs does not reveal damages and weaknesses introduced by simplification.
 
-### Some Not So Useful Advances in Simulated Annealing and Memetics
+### Some Advances in Simulated Annealing and Memetics
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA looks visible also in the R community.
 
@@ -315,7 +333,9 @@ A note on memetics, e.g. the use of BFGS inside some global search. About half o
 
 In a way, CMAES is the most tuned and tested memetics, the best one can do when combining Newton/curvature with stochastics.
 
-### Some Tests on BBOB-2009
+### Some BBOB-2009 Tests
+
+One can see how bad everything is compared to BIPOP-aCMAES, but there are a lot of problems still solvable with (restarted) Newton, and things go South even for CMAESes in D > 100. People also play some "improvement games" at very low budgets, but the targets are not so stable, so we seldom get any critical mass on any algorithm in that "Bayesian optimization" space developed already in 1970s.
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
@@ -337,4 +357,6 @@ In a way, CMAES is the most tuned and tested memetics, the best one can do when 
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to other functions. Use pycma BIPOP-aCMAES or Minion ARRDE for any DFO.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma BIPOP-aCMAES or Minion ARRDE for any black box DFO.
+
+If there is no ill-condioning, the ES is simple and powerful. I believe there is something in those Rastrigins. A quadric plus harmonic, sort of Ancient Rome and Ancient Greece...
