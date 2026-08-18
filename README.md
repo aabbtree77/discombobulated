@@ -411,7 +411,7 @@ CMAES is incredible when one sees how much effort surrounds the algorithm:
 
 [https://cma-es.github.io/](https://cma-es.github.io/)
 
-Sadly, the CMAES evolution seems to end around 2014, and with it, the whole ES story.
+Sadly, the CMAES evolution seems to end around 2014, and with it, the great ES saga. See also pycma [Discussion 367](https://github.com/CMA-ES/pycma/discussions/367).
 
 ## P.S.
 
