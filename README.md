@@ -176,7 +176,7 @@ The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6
 
 Adding random sigma bursts during the optimization does not improve anything.
 
-Still, expect to solve a good half of the whole BBOB-2009 (if not everything except F2, F7, and F10-F14) with this ES, and it is a lot fewer parameters and more simple than cumulation and matrices in CMAES.
+Expect to solve a good half of the whole BBOB-2009 with the ES (if not everything except F2, and F10-F14, but these can be done with the scipy BFGS).
 
 ## The Bad: F12 CEC-2022
 
@@ -226,7 +226,9 @@ Progress saved to     : progress_cec2022_f12.csv
 
 Most of the state of the art is around 10% of the relative error. I have not seen any algorithm to go below 2900. The same story with most of the hybrids/composites in CEC-2017 and CEC-2022, and not only with them.
 
-This is actually decent. The bad part about the ES is that it might be somewhat sensitive to the starting point and initial step size, and also the sigma schedule.
+~~This is actually decent. The bad part about the ES is that it might be somewhat sensitive to the starting point and initial step size, and also the sigma schedule.~~
+
+pycma BIPOP-aCMAES and Minion ARRDE are much more frugal and often better on F20 - F30 CEC2017 than the ES.
 
 ## The Ugly: F10 BBOB-2009
 
@@ -240,9 +242,11 @@ That number can be proprotional to the condition number squared... The ES reache
 
 After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to BIPOP-aCMAES or ARRDE.
 
+This is not really ugly as it is still solvable by the ES, but the budget needs to be enormous. F20 - F30 CEC-2017 (except F22 and F27) is where things become ugly.
+
 ## The Rules of the Game
 
-In derivative free optimization (DFO) there emerge two primary challenges: multimodality and ill-conditioning. The first one is handled well with stochastic sampling such as the ES, the second - with Newton methods.
+In derivative free optimization (DFO) there emerge two primary challenges: multimodality and ill-conditioning. The first one is handled with stochastic sampling such as the ES, the second - with Newton methods.
 
 The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
 
@@ -260,13 +264,13 @@ I propose the following benchmark:
 | ARRDE        | <500K         | >200M         | >200M (f=2400) |
 ```
 
-One could add F7 BBOB-2009 to make it very unfriendly for Newton/gradient methods, but let us assume these cost functions are too rare.
+One could add F7 BBOB-2009 to make it very unfriendly for Newton/gradient methods, but let us assume zero gradient cost functions are rare.
 
 The three functions above reveal a lot:
 
-- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals. Sadly, works only with mild condition numbers (up to ~1000, would solve F18 BBOB-2009). It is somewhat sensitive w.r.t. starting points and the "sigma schedule", but does so much with so little. Very fast even in Python, no dependencies, predictable behavior.
+- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals. Sadly, works only with mild condition numbers (up to ~1000, would solve F18 BBOB-2009). It is somewhat sensitive w.r.t. starting points and the "sigma schedule", but does so much with so little. Very fast even in Python, no dependencies, predictable behavior. Too low tech, won't impress the champions.
 
-- BIPOP-aCMAES (pycma CMAES), a brilliant most tested optimization algorithm on the planet, very frugal when it works, but fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate. The state of the art.
+- BIPOP-aCMAES (pycma CMAES), a brilliant most tested optimization algorithm on the planet, very frugal when it works, but fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
 
@@ -331,11 +335,15 @@ Minion's result in D=10 is somewhat contradictory, but it depends on the startin
 
 A note on memetics, e.g. the use of BFGS inside some global search. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20 this approach does not seem to lead anywhere.
 
-In a way, CMAES is the most tuned and tested memetics, the best one can do when combining Newton/curvature with stochastics.
+In a way, CMAES is the most tuned and tested memetics, the best one can do when combining Newton/curvature with stochastics, or the most improved ES regarding adaptive step sizes and curvature exploitation.
 
 ### Some BBOB-2009 Tests
 
-One can see how bad everything is compared to BIPOP-aCMAES, but there are a lot of problems still solvable with (restarted) Newton, and things go South even for CMAESes in D > 100. People also play some "improvement games" at very low budgets, but the targets are not so stable, so we seldom get any critical mass on any algorithm in that "Bayesian optimization" space developed already in 1970s.
+There are a lot of tests reported, but I would recommend running things yourself, as it is often much faster and there is no need to decipher various missing details and rationale in some super terse for no reason reports.
+
+One exception is Baeysian Optimization as it is complex and annoyingly slow to run. I would avoid this domain entirely as those tiny budgets lack stability, and there is no convergence/critical mass on any existing algorithm despite the field energing already in 1970s...
+
+**Most importantly, if an algorithm has no code used by masses, it does not exist.**
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
@@ -355,8 +363,44 @@ One can see how bad everything is compared to BIPOP-aCMAES, but there are a lot 
 - Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
   BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
 
+## Classics
+
+Most of the early algorithms did not survive the test of time. Some analysis tools, boundary handling, a few test functions did.
+
+We know our methods won't live long either. Optimization is a technology. However, we still share the same excitement once the algorithm finds the optimum.
+
+Classics should neither be underestimated nor overestimated. A lot of elegance and insights there, but also not enough data/testing, obsession with math, proofs, belief structures. The whole BFGS and convex optimization saga stretching from Fletcher and Powell circa 1963 and continuing with Nesterov and all these endless SIAM and NIPS people. Practical Bayes starts already in 1970s, if not earlier.
+
+Math is most often about writing too much about too little, but the client (government) pays per equation/lemma, so the reports tend to grow in time, and the latest Fields medals are now spanning 200 pages on arXiv.
+
+Add cliping to Barzilai–Borwein method for gradient descent, then write the whole paper/thesis about the convergence of the modified version when the whole method is too niche to spend this much time, be it a clipped/stabilized step size or not.
+
+Endless variations around Newton, stochastic sampling, surrogates, mostly without proper testing at all. These types of works continue to appear en masse even in 2020s, wonder if I am the only one who is reading them...
+
+H. H. Rosenbrock (1960) An Automatic Method for Finding the Greatest or Least Value of a Function
+
+R. Fletcher and M.J.D. Powell (1963) A Rapidly Convergent Descent Method for Minimization
+
+L. A. Rastrigin (1965) Solution of inverse problems by statistical optimization methods
+
+M. J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
+
+M.A. Schumer and K. Steiglitz (1968) Adaptive step size random search
+
+L.J. White and R.G. Day (1971) An Evaluation of Adaptive Step-Size Random Search
+
+J. Mockus, V. Tiesis, A. Zilinskas (1978) The Application of Bayesian Methods for Seeking the Extremum
+
+...
+
+## CMAES Evolution
+
+CMAES is incredible when one sees how much effort surrounds the algorithm:
+
+[https://cma-es.github.io/](https://cma-es.github.io/)
+
+Sadly the evolution report ends around 2014, and differential evolution seems like a more viable direction now.
+
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma BIPOP-aCMAES or Minion ARRDE for any black box DFO.
-
-If there is no ill-condioning, the ES is simple and powerful. I believe there is something in those Rastrigins. A quadric plus harmonic, sort of Ancient Rome and Ancient Greece...
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma BIPOP-aCMAES for tiny budgets and Minion ARRDE to push the limits.
