@@ -391,7 +391,17 @@ L.J. White and R.G. Day (1971) An Evaluation of Adaptive Step-Size Random Search
 
 J. Mockus, V. Tiesis, A. Zilinskas (1978) The Application of Bayesian Methods for Seeking the Extremum
 
+J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
+
 ...
+
+[CMAES 1996 - 2014](https://cma-es.github.io/)
+
+...
+
+finally escaping calculus, probabilities, and linear algebra:
+
+Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429)
 
 ## CMAES Evolution
 
@@ -399,7 +409,7 @@ CMAES is incredible when one sees how much effort surrounds the algorithm:
 
 [https://cma-es.github.io/](https://cma-es.github.io/)
 
-Sadly the evolution report ends around 2014, and differential evolution seems like a more viable direction now.
+Sadly, the CMAES evolution seems to end around 2014, and with it, the whole ES story.
 
 ## P.S.
 
