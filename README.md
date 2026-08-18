@@ -379,26 +379,24 @@ Classics should neither be underestimated nor overestimated. A lot of elegance a
 
 - J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
 
-...
+- ...
 
 - [CMAES 1996 - 2014](https://cma-es.github.io/)
 
-...
+- ...
 
-finally escaping entire linear algebra and calculus:
+- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429)
 
-Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429)
-
-_What a liberation, took more than 60 years to drop the shackles!_
+Finally escaping entire linear algebra and calculus. What a liberation, it took more than 60 years to drop the shackles.
 
 ## CMAES Evolution
 
-The CMAES is still incredible museum exhibition piece when one sees how much effort surrounds the algorithm:
+The CMAES is still incredible museum piece when one sees how much effort surrounds the algorithm:
 
 [https://cma-es.github.io/](https://cma-es.github.io/)
 
-Sadly, the evolution ended around 2014. See also pycma [Discussion 367](https://github.com/CMA-ES/pycma/discussions/367).
+The evolution ends around 2014. See also pycma [Discussion 367](https://github.com/CMA-ES/pycma/discussions/367).
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma BIPOP-aCMAES for tiny budgets and Minion ARRDE to push the limits.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE everywhere else.
