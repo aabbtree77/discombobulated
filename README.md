@@ -367,13 +367,15 @@ One exception is Baeysian Optimization as it is complex and annoyingly slow to r
 
 Most of the early algorithms did not survive the test of time. Some analysis tools, boundary handling, a few test functions did.
 
-We know our methods won't live long either. Optimization is a technology. However, we still share the same excitement once the algorithm finds the optimum.
+Modern methods won't live long either. Optimization is technology. However, we still share the same excitement as people in the 1960s when the algorithm finds the optimum.
 
-Classics should neither be underestimated nor overestimated. A lot of elegance and insights there, but also not enough data/testing, obsession with math, proofs, belief structures. The whole BFGS and convex optimization saga stretching from Fletcher and Powell circa 1963 and continuing with Nesterov and all these endless SIAM and NIPS people. Practical Bayes starts already in 1970s, if not earlier.
+Classics should neither be underestimated nor overestimated. A lot of elegance and insights there, but also not enough data/testing, obsession with math, proofs, belief structures. The whole BFGS and convex optimization saga stretching from Fletcher and Powell circa 1963 and continuing with Nesterov and all these endless SIAM, NIPS... reports. Practical Bayes starts already in 1970s, if not earlier.
 
-Math is most often about writing too much about too little, but the client (government) pays per equation/lemma, so the reports tend to grow in time, and the latest Fields medals are now spanning 200 pages on arXiv.
+Sadly, math is most often about writing too much about too little, but the client (government) pays per equation/lemma, so the reports tend to grow in time, and the latest Fields medals are now spanning 200 pages on arXiv due to that feedback.
 
-Add cliping to Barzilai–Borwein method for gradient descent, then write the whole paper/thesis about the convergence of the modified version when the whole method is too niche to spend this much time, be it a clipped/stabilized step size or not.
+**People do not read/review/test much, but they bow to complexity and belief structures.**
+
+Add cliping to the Barzilai–Borwein method for gradient descent, then write the whole paper/thesis about the convergence of the modified version when the whole method is too niche to spend this much time, be it a clipped/stabilized step size or not.
 
 Endless variations around Newton, stochastic sampling, surrogates, mostly without proper testing at all. These types of works continue to appear en masse even in 2020s, wonder if I am the only one who is reading them...
 
