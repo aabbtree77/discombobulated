@@ -4,7 +4,7 @@
 
 ## In Search of the Best Derivative-Free Optimization Algorithm
 
-Do we need complex modern CMAESes/DEs?
+Do we need complex modern optimization algorithms?
 
 The "CMA" part in "CMAES" is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
@@ -58,7 +58,7 @@ class CWALK:
             self.sigma = sigma
 ```
 
-Believe it or not, the code solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including some big and complex "multimodal" ones such as the MCS and Nomad.
+Believe it or not, the code solves the rotated Lunacek bi-Rastrigin (F24 BBOB-2009). This is where all the intricate Newton/Powell methods fail, including the MCS and Nomad.
 
 ## Setup
 
@@ -152,17 +152,15 @@ It takes 1e4xD evals to reach 0.2% relative error.
 - Reduce budget 10x, reduce lambda 10x, relative error will increase 10x.
 - Increase budget 10x, increase lambda 10x, relative error will decrease 100x!
 
-However, to get a guaranteed convergence is not easy. For 1e7xD relative error is still O(1e-5).
-
-For a fixed lambda, simply increasing budget does not lead to convergence. One needs to increase lambda and the budget by the same factor.
-
-However, going for epsilon this way does not look viable. Better run with 1e4xD..1e5D budget and lambda=10D..100D to reveal a nonadversarial initial point and vicinity of the optimum, and then apply scipy's SLSQP/BFGS if epsilon matters.
+For 1e7xD evals the relative error is still O(1e-5).
 
 lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
-_Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead the ES to the F24 optimum._
+Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead the ES to the F24 optimum.
 
-Normality is not essential, but other distributions do not improve optmization. One can reach relative error O(1e-5) with
+Normality is not essential, but other distributions do not improve optmization.
+
+One can reach relative error O(1e-5) with
 
 ```python
 self.Z = self.rng.laplace(0.0, 1.0, (self.lam, self.D))
@@ -176,11 +174,11 @@ self.Z = self.rng.uniform(-3.0, 3.0, (self.lam, self.D))
 
 Uniformity within [-5.0, 5.0] will still work, but [-1.0, 1.0] won't. The scale in the Laplace distribution can go up to 3.0..4.0, but no further.
 
-The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical on Rastrigins, but it is a parameter to adjust nonetheless. The choice of the initial sigma value is crucial and tied to the budget. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints).
+The choice of the final sigma value at the end of the budget, be it 1e-4 or 1e-6, is not too critical. The choice of the initial sigma value is. For very large budgets sigma can be tiny and constant, otherwise we go with 10% of the biggest coordinate range (from box constraints).
 
 Adding random sigma bursts during the optimization does not improve anything.
 
-Expect to solve a good half of the whole BBOB-2009 with the ES (if not everything except F2, and F10-F14, these can be done with scipy BFGS).
+Expect to solve a good half of the whole BBOB-2009 with the ES (if not everything except F2, F10 - F14, but these can be done with scipy BFGS).
 
 ## The Bad: F12 CEC-2022
 
@@ -228,17 +226,13 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is within 10% from the optimum. I have not seen any algorithm to go below 2900. Similar stories with hybrids/composites in CEC-2017 and CEC-2022.
-
-~~This is actually decent. The bad part about the ES is that it might be somewhat sensitive to the starting point and initial step size, and also the sigma schedule.~~
-
-pycma BIPOP-aCMAES and Minion ARRDE are simply better than the ES.
+Most of the state of the art is within 10% from the optimum. I have not seen any algorithm to go below 2900.
 
 ## The Ugly: F10 BBOB-2009
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-The ES is horrid when ill-conditioning takes place. It still solves these problems, but one needs to increase the budget 1000x, say to a billion of evals.
+The ES becomes brittle with ill-conditioning. It still solves these problems, but one needs to increase the budget 1000x, say to a billion evals.
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number..." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
@@ -246,15 +240,13 @@ That number can be proprotional to the condition number squared... The ES reache
 
 After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to BIPOP-aCMAES or ARRDE.
 
-This is not really ugly as it is still ultimately solvable by the ES. F20 - F30 CEC-2017 (except F22 and F27) is where things become real.
-
 ## The Rules of the Game
 
 So this is all about multimodality and ill-conditioning.
 
 The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
 
-CEC-2017 is a bigger challenge as there are a lot of functions which are both: multimodal and ill-contioned. Except for F22, F24, and F27, the F20 - F30 multimodals are beyond any known method if we require an optimizer to get close to the global optimum with, say, 1% relative error in 1B evals.
+CEC-2017 is a bigger challenge as there are a lot of functions which are both: multimodal and ill-contioned. Except for F22, F24, and F27, F20 - F30 are beyond any known method if we require an optimizer to get close to the global optimum with, say, 1% relative error in 1B evals.
 
 I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 
@@ -266,23 +258,21 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | ARRDE        | <500K         | >200M         | >200M (f=2400) |
 ```
 
-One could add F7 BBOB-2009 to make it very unfriendly for Newton/gradient methods, but let us assume zero gradients are rare (they are not).
+One could add F7 BBOB-2009 to remove pure Newton/gradient methods.
 
 The three functions above reveal a lot:
 
-- ES: wipes the floor with Newton/Powell, MCS, Nomad... on Rastrigin-like multimodals. Sadly, works only with mild condition numbers (up to ~1000, would solve F18 BBOB-2009). It is somewhat sensitive w.r.t. starting points and "sigma schedule". Too low tech, won't impress the champions.
+- ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. It works only with mild condition numbers (up to ~1000, solves F18 BBOB-2009). It is sensitive w.r.t. starting points and initial sigma.
 
-- BIPOP-aCMAES (pycma CMAES), the most developed optimization algorithm on the planet, very frugal when it works, but fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
+- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25. Notably, the ARRDE sustains ill-conditioning without matrices.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25: ARRDE f = 2800, BIPOP-aCMAES f = 2900. Notably, the ARRDE sustains ill-conditioning without matrices.
 
 ## Anything Better Out There?
 
-### A Few Newest DEs
+### Newest DEs?
 
-The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx-SOP, but it is designed for tiny CEC-2025 budgets (2e4xD evals). It already has improvements, alternatives.
-
-- Khoirul Faiq Muzakka et al. (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
+RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals). It already has improvements, alternatives.
 
 - Sichen Tao et al. (2026) [RDEx-SOP: Exploitation-Biased Reconstructed Differential Evolution for Fixed-Budget Bound-Constrained Single-Objective Optimization](https://arxiv.org/abs/2603.27089)
 
@@ -292,7 +282,7 @@ The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx
 
 - Ryoji Tanabe and Alex Fukunaga (2020) [How Far Are We From an Optimal, Adaptive DE?](https://arxiv.org/abs/2010.01032)
 
-### Some CMAES Papers
+### CMAES Mods?
 
 - LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking outside equations:
 
@@ -311,13 +301,13 @@ The ARRDE is outstanding with larger budgets. There is also a new DE called RDEx
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-  The problem is, for any such simplification, everything starts anew. For instance, the rank one algorithm is too sensitive/unreliable w.r.t. starting points and initial step sizes on F10 BBOB-2009, while pycma has no trouble here. The rank one update also does not work with larger lambdas as its simplistic CSA blows up the step size.
+  The problem is, for any such simplification, everything starts anew, e.g. the rank one algorithm is too sensitive/unreliable w.r.t. starting points and initial step sizes on F10 BBOB-2009, while pycma brings no such trouble. The rank one update also does not work with larger lambdas as its simplistic CSA blows up the step size.
 
-  None of this is valuable as we simply lose years of testing and tuning present in pycma. This is why I would also not recommend any custom implementation of CMAESes including the ones by [Minion](https://github.com/khoirulmuzakka/Minion).
+  None of this is valuable as we simply lose years of testing and tuning present in pycma. This is why I would also not recommend any custom implementation of CMAESes including the ones by [Minion](https://github.com/khoirulmuzakka/Minion/issues/7).
 
   Any simplification should be tested on every BBOB-2009 function one by one, with different step sizes, initial points, lambdas.
 
-### Some Advances in Simulated Annealing and Memetics
+### Dual Annealing?
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
 
@@ -325,17 +315,13 @@ I did not get anything from DAs on CEC2017 F24 - F30 in D=20. Also tried [this c
 
 Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
 
-Minion's result in D=10 is somewhat contradictory, but it depends on the starting point and D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in less than 100K evals (reaching 2600). In my run, for the zero starting point, SEED = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
+Minion's result in D=10 is somewhat contradictory, but it depends on the starting point and D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, SEED = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
-A note on memetics, e.g. the use of the BFGS in combination with sampling. About half of the problems on BBOB-2009 and CEC-2017 are completely solvable with Newton methods, and there are some multimodals which are solvable with Newton via restarts. On trully difficult problems, such as F24 - F30 CEC-2017 in higher dimensions such as D=20, memetics does not lead anywhere.
+### BBOB-2009
 
-In a way, pycma CMAES is the most tuned and tested memetics. The best one can do when combining Newton with stochastics. Also, it is the most improved ES with adaptive step sizes and curvature.
+Nowadays it is much faster to git clone and test an algorithm than [deciphering some terse for no reason report](https://github.com/CMA-ES/pycma/discussions/370).
 
-### Some BBOB-2009 Tests
-
-Nowadays it is much faster to git clone and test an algorithm locally than trying to decipher various missing details and rationale in some super terse outdated benchmark report out there.
-
-One exception is Baeysian Optimization as it is complex and annoyingly slow to run. I would avoid this domain entirely as those tiny budgets lack stability, and there is no convergence/critical mass on any existing algorithm despite the field energing already in 1970s. pycma CMAES is very close to these anyway.
+One exception is Baeysian Optimization (BO) as it is complex and annoyingly slow to run. I would avoid this domain entirely as those tiny budgets lack stability, and there is no convergence/critical mass on any existing algorithm since 1970s. [Use scipy SLSQP/BFGS with pycma CMAES](https://github.com/CMA-ES/pycma/discussions/364), it is very frugal with evals and far more developed than any BO.
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
@@ -357,19 +343,15 @@ One exception is Baeysian Optimization as it is complex and annoyingly slow to r
 
 ## Classics
 
-Most of the early algorithms did not survive the test of time. Analysis, boundary handling, testing did.
-
-Modern methods won't live long either. Optimization is technology. However, we still share the same excitement as people in the 1960s when an algorithm finds the optimum.
-
-Classics should neither be underestimated nor overestimated. A lot of elegance and insights there, but also not enough data/testing, obsession with math, proofs, belief structures. People do not read/review/test much, but they bow to complexity.
+Early algorithms did not survive the test of time. Analysis, boundary handling did.
 
 - H. H. Rosenbrock (1960) An Automatic Method for Finding the Greatest or Least Value of a Function
 
 - R. Fletcher and M.J.D. Powell (1963) A Rapidly Convergent Descent Method for Minimization
 
-- L. A. Rastrigin (1965) Solution of inverse problems by statistical optimization methods
+- L.A. Rastrigin (1965) Solution of inverse problems by statistical optimization methods
 
-- M. J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
+- M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
 - M.A. Schumer and K. Steiglitz (1968) Adaptive step size random search
 
@@ -385,18 +367,10 @@ Classics should neither be underestimated nor overestimated. A lot of elegance a
 
 - ...
 
-- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429)
+- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
-Finally escaping entire linear algebra and calculus. What a liberation, it took more than 60 years to drop the shackles.
-
-## CMAES Evolution
-
-The CMAES is still incredible museum piece when one sees how much effort surrounds the algorithm:
-
-[https://cma-es.github.io/](https://cma-es.github.io/)
-
-The evolution ends around 2014. See also pycma [Discussion 367](https://github.com/CMA-ES/pycma/discussions/367).
+[Farewell to matrices and convergence proofs.](https://github.com/CMA-ES/pycma/discussions/367)
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins, but this superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE everywhere else.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE to push the limits.
