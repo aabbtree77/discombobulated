@@ -282,11 +282,13 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
 ### CMAES Mods?
 
-- Lots of CMAES complications exist, but I could not get anything with them so far, e.g.
+- Lots of CMAES complications exist, but I could not get anything from them so far, e.g.
 
   Dimitar Nedanovski et al. (2026) [MSC-CMA-ES: Structure-Aware Restarts for CMA-ES via Cyclic Nearest-Better Basin Discovery](https://arxiv.org/abs/2606.15830), [Github](https://github.com/snenovgmailcom/cma_es_project/tree/main)
 
-  It does not get into f = 2400 on F24 CEC-2017 and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration.
+  It does not reach f = 2400 on F24 CEC-2017 at all and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration. 
+  
+  Default parameters, SEED = 20260825, F24 CEC-2017 D=20 got precisely f = 2500 in 200M evals, which took about 5 hours to run (a single optimization) on i7 gen4 16GB RAM. The C++ acceleration is only for clustering, pycma CMAES runs inside MSC-CMA-ES.
 
 - Another one bites the dust:
 
@@ -317,7 +319,7 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
   Any simplification should be tested on every BBOB-2009 function one by one, with different step sizes, initial points, lambdas.
 
-  On the other hand, Zhenhua Li and Qingfu Zhang get 90% of CMAES with 10% effort, with restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page. It is also very fast even without C++ as there is no linear algebra and no looping inside generations, only matrix products.
+  On the other hand, Zhenhua Li and Qingfu Zhang achieve 90% of CMAES with 10% effort. With restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page and is also very fast without C++. There is no linear algebra and no looping inside generations. Only a few simple matrix products are needed.
 
 ### Dual Annealing?
 
@@ -331,7 +333,7 @@ Minion's result in D=10 depends on the starting point and D=10 does not generali
 
 ### BBOB-2009
 
-Nowadays it is much faster to git clone and test an algorithm than [deciphering some terse for no reason report](https://github.com/CMA-ES/pycma/discussions/370).
+Nowadays it is much faster to git clone and test an algorithm than [to decipher any terse report](https://github.com/CMA-ES/pycma/discussions/370).
 
 One exception is Baeysian Optimization (BO) as it is complex and annoyingly slow to run. I would avoid this domain entirely as those tiny budgets lack stability, and there is no convergence/critical mass on any existing algorithm since 1970s. [Use scipy SLSQP/BFGS with pycma CMAES](https://github.com/CMA-ES/pycma/discussions/364), it is very frugal with evals and far more developed than any BO.
 
