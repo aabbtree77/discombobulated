@@ -6,7 +6,7 @@
 
 Do we need complex modern optimization algorithms?
 
-The "CMA" part in "CMAES" is needed to solve badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
+The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -260,8 +260,6 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods.
 
-The three functions above reveal a lot:
-
 - ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. It works only with mild condition numbers (up to ~1000, solves F18 BBOB-2009). It is sensitive w.r.t. starting points and initial sigma.
 
 - BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
@@ -284,12 +282,24 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
 ### CMAES Mods?
 
-- LLMs are everywhere now. This one uses local minimal models to "explain" concrete optimization results after the run, which is not very useful per se, but might stimulate some thinking outside equations:
+- Lots of CMAES complications exist, but I could not get anything with them so far, e.g.
+
+  Dimitar Nedanovski et al. (2026) [MSC-CMA-ES: Structure-Aware Restarts for CMA-ES via Cyclic Nearest-Better Basin Discovery](https://arxiv.org/abs/2606.15830), [Github](https://github.com/snenovgmailcom/cma_es_project/tree/main)
+
+  It does not get into f = 2400 on F24 CEC-2017 and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration.
+
+- Another one bites the dust:
+
+  Khoirul Faiq Muzakka et al. (2026) [RCMAES: A Robust CMA-ES Variant for CEC2026 Competition](https://arxiv.org/abs/2604.27138)
+
+  No difference, except that it is much faster to test than pycma and MSC-CMA-ES and is integrated into [Minion](https://github.com/khoirulmuzakka/Minion).
+
+- LLMs are everywhere now. This one was quite early and used local minimal models to "explain" concrete optimization results after the run. This is not very useful per se, but might stimulate some thinking towards embracing a brave new world:
 
   Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
   Large Language Models](https://arxiv.org/abs/2407.08331)
 
-- Some theory indicating that the population size in the ES should be O(sqrt(D)xlog(D)):
+- Endless hopeless theory, e.g. indicating that the population size should be O(sqrt(D)xlog(D)):
 
   Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
   Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
@@ -307,6 +317,8 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
   Any simplification should be tested on every BBOB-2009 function one by one, with different step sizes, initial points, lambdas.
 
+  On the other hand, Zhenhua Li and Qingfu Zhang get 90% of CMAES with 10% effort, with restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page.
+
 ### Dual Annealing?
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
@@ -315,7 +327,7 @@ I did not get anything from DAs on CEC2017 F24 - F30 in D=20. Also tried [this c
 
 Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
 
-Minion's result in D=10 is somewhat contradictory, but it depends on the starting point and D=10 may not generalize to D=20. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, SEED = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
+Minion's result in D=10 depends on the starting point and D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, SEED = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
 ### BBOB-2009
 
@@ -373,4 +385,4 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE to push the limits.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE otherwise.
