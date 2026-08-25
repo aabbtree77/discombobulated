@@ -317,7 +317,7 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
   Any simplification should be tested on every BBOB-2009 function one by one, with different step sizes, initial points, lambdas.
 
-  On the other hand, Zhenhua Li and Qingfu Zhang get 90% of CMAES with 10% effort, with restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page.
+  On the other hand, Zhenhua Li and Qingfu Zhang get 90% of CMAES with 10% effort, with restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page. It is also very fast even without C++ as there is no linear algebra and no looping inside generations, only matrix products.
 
 ### Dual Annealing?
 
