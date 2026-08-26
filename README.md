@@ -319,8 +319,6 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
   Any simplification should be tested on every BBOB-2009 function one by one, with different step sizes, initial points, lambdas.
 
-  On the other hand, Zhenhua Li and Qingfu Zhang achieve 90% of CMAES with 10% effort. With restarts and a few tweaks this could be the best DFO algorithm on the planet in the sense of approximating the state of the art with the code that fits on a single page and is also very fast without C++. There is no linear algebra and no looping inside generations. Only a few simple matrix products are needed.
-
 ### Dual Annealing?
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
@@ -421,7 +419,7 @@ In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES 
 
 Increasing evals to 500M may not improve anything:
 
-| SEED     | M1 | M2 | Minion    |
+| Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
 | 20260829 | 2500 | 2500 | 2500 | 
 
@@ -430,7 +428,7 @@ Increasing evals to 500M may not improve anything:
  In this problem fopt = 2500, most of the strong algorithms reach ~2900, 
  but ARRDE gets into f = 2800.
 
-| SEED     | M1 | M2 | Minion    |
+| Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
 | 20250306 | 2899 | 2899 | 2800 |
 | 20260818 | 2800 | 2899 | 2800 |
@@ -449,12 +447,30 @@ Minion's ARRDE required the least number of restarts here.
 
 Increasing evals to 500M can be critical:
 
-| SEED     | M1 | M2 | Minion    |
+| Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
 | 20260821 | 2899 | 2899 | 2800 |
  
 All the major conclusions are the opposite to the ones in Test 1!
 
+### Further Tests and Questions
+
+If someone tested F28 CEC-2017 D=20, ARRDE would be ahead of BIPOP-aCMAES again. It would reach f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
+
+Oddly, the inclusion of zero in the initial population may change results. 
+
+F24 Seed=20250306 improves Minion's ARRDE from f=2500 to f=2400.
+
+Is zero critically informative about the global optimum, or it merely changes the seed to the lucky one?
+
+In F28 Seed=20250306 the zero does not matter.
+
+This needs more testing and it can go on and on, but I better stop here. 
+
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. I would use pycma's CMAES for "Bayesian optimization" and Minion's ARRDE otherwise.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. 
+
+I would recommend pycma's CMAES for "Bayesian optimization". Inside as the optimizer of a so called acquisition function, or as a stand-alone Bayesian optimization algorithm. It is very frugal with evaluations and remains the most tested algorithm on the planet. 
+
+Minion's ARRDE is clearly better than pycma's BIPOP-aCMAES on the most difficult composites of CEC-2017, when one can afford very large cost function evaluation budgets such as 1e8xD and beyond.
