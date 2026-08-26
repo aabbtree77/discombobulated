@@ -412,7 +412,9 @@ In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES 
 | 20260828 | 2500 | 2500 | 2500 |
 | 20260829 | 2500 | 2500 | 2500 |
 
- One may conclude that M1 is indeed an improvement, but the F25 test below will negate that.
+ One may conclude that M1 is indeed an improvement, but the F25 test below will negate that. 
+ 
+ Note: Minion is capable of getting into 2400 with some of these seeds, but one needs to add a zero starting point. The test uses default parameters and nothing extra added, same with the F25 below.
 
  These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
  restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
@@ -430,6 +432,8 @@ Increasing evals to 500M may not improve anything:
 
 | SEED     | M1 | M2 | Minion    |
 |----------|------|------|------|
+| 20250306 | 2899 | 2899 | 2800 |
+| 20260818 | 2800 | 2899 | 2800 |
 | 20260820 | 2800 | 2800 | 2899 |
 | 20260821 | 2899 | 2899 | 2899 |
 | 20260822 | 2899 | 2899 | 2899 |
@@ -440,8 +444,6 @@ Increasing evals to 500M may not improve anything:
 | 20260827 | 2800 | 2800 | 2800 |
 | 20260828 | 2800 | 2899 | 2800 |
 | 20260829 | 2899 | 2800 | 2800 |
-| 20260818 | 2800 | 2899 | 2800 |
-| 20250306 | 2899 | 2899 | 2800 |
 
 Minion's ARRDE required the least number of restarts here.
 
