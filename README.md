@@ -385,6 +385,74 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 [Farewell to matrices and convergence proofs.](https://github.com/CMA-ES/pycma/discussions/367)
 
+## Testing ARRDE
+
+At the moment I have two variants of my own "improved" ARRDE, call them M1 and M2, but do they improve Minion? 
+
+This space of super tuned algorithms is very demanding to test. One needs harder problems to discern the cases, they in turn demand big eval budgets (a lot of computational time), and the algorithms turn out to be very sensitive to random seeds which I simply choose as dates here.
+
+### Test 1: F24 CEC-2017, D=20, 200M evals
+
+Single optimization is already painfully slow, ~1000s.
+
+In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES or DE.
+
+| Seed     | M1 | M2 | Minion    |
+|----------|------|------|------|
+| 20250306 | 2500 | 2500 | 2500 |
+| 20260818 | 2500 | 2500 | 2500 |
+| 20260820 | 2500 | 2500 | 2500 |
+| 20260821 | 2500 | 2500 | 2500 |
+| 20260822 | 2500 | 2500 | 2500 |
+| 20260823 | 2500 | 2500 | 2500 |
+| 20260824 | 2500 | 2500 | 2500 |
+| 20260825 | 2400 | 2500 | 2500 |
+| 20260826 | 2400 | 2500 | 2500 |
+| 20260827 | 2500 | 2500 | 2500 |
+| 20260828 | 2500 | 2500 | 2500 |
+| 20260829 | 2500 | 2500 | 2500 |
+
+ One may conclude that Minion's ARRDE is the worst here, but the F25 test below will give the opposite picture.
+
+ These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
+ restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
+
+Increasing evals to 500M may not improve anything:
+
+| SEED     | M1 | M2 | Minion    |
+|----------|------|------|------|
+| 20260829 | 2500 | 2500 | 2500 | 
+
+### Test 2: F25 CEC-2017, D=20, 200M evals
+ 
+ In this problem fopt = 2500, most of the strong algorithms reach ~2900, 
+ but ARRDE gets into f = 2800.
+
+| SEED     | M1 | M2 | Minion    |
+|----------|------|------|------|
+| 20260820 | 2800 | 2800 | 2899 |
+| 20260821 | 2899 | 2899 | 2899 |
+| 20260822 | 2899 | 2899 | 2899 |
+| 20260823 | 2899 | 2899 | 2800 |
+| 20260824 | 2899 | 2899 | 2899 |
+| 20260825 | 2899 | 2899 | 2899 |
+| 20260826 | 2800 | 2899 | 2800 |
+| 20260827 | 2800 | 2800 | 2800 |
+| 20260828 | 2800 | 2899 | 2800 |
+| 20260829 | 2899 | 2800 | 2800 |
+| 20260818 | 2800 | 2899 | 2800 |
+| 20250306 | 2899 | 2899 | 2800 |
+
+Minion's ARRDE required the least number of restarts here.
+
+Increasing evals to 500M can be critical:
+
+| SEED     | M1 | M2 | Minion    |
+|----------|------|------|------|
+| 20260821 | 2899 | 2899 | 2800 |
+ 
+All the major conclusions are the opposite to the ones in Test 1!
+
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. Use pycma CMAES for "Bayesian optimization" and Minion ARRDE otherwise.
+I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. I would use pycma's CMAES for "Bayesian optimization" and Minion's ARRDE otherwise.
