@@ -412,7 +412,7 @@ In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES 
 | 20260828 | 2500 | 2500 | 2500 |
 | 20260829 | 2500 | 2500 | 2500 |
 
- One may conclude that Minion's ARRDE is the worst here, but the F25 test below will give the opposite picture.
+ One may conclude that M1 is indeed an improvement, but the F25 test below will negate that.
 
  These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
  restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
