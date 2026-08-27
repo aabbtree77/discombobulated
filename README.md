@@ -417,7 +417,7 @@ In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES 
  These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
  restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
 
-Increasing evals to 500M may not improve anything:
+Increasing evals to 500M/adding zero may not improve anything:
 
 | Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
@@ -450,6 +450,9 @@ Increasing evals to 500M can be critical:
 | Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
 | 20260821 | 2899 | 2899 | 2800 |
+| 20260824 | 2800 | 2800 | 2800 |
+
+The zero inclusion does not change anything with these two seeds.
  
 All the major conclusions are the opposite to the ones in Test 1!
 
@@ -459,11 +462,13 @@ If someone tested F28 CEC-2017 D=20, ARRDE would be ahead of BIPOP-aCMAES again.
 
 Oddly, the inclusion of zero in the initial population may change results. 
 
-F24 Seed=20250306 improves Minion's ARRDE from f=2500 to f=2400.
+F24 Seed=20250306 with zero improves Minion's ARRDE from f=2500 to f=2400. However, F24 Seed=20260821 does not. 
+
+For F25 Seed=20260824, also F28 Seed=20250306, the zero inclusion does nothing there.
 
 Is zero critically informative about the global optimum, or it merely changes the seed to the lucky one?
 
-In F28 Seed=20250306 the zero does not matter.
+It looks important for F24 CEC-2017, not so much for F25/F28 CEC-2017.
 
 This needs more testing and it can go on and on, but I better stop here. 
 
@@ -471,15 +476,11 @@ This needs more testing and it can go on and on, but I better stop here.
 
 I got sidetracked. The main idea was to share a surprise pulled by the ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. 
 
-A lot of engineering problems are of type "shape optimization wrapped in a loop wth a simulator". The shape variables live in the same space with values on the same scale. The ES is worth trying as it will handle tough multimodality, and will guarantee speed (in Python, no need for C++), with some extra benefits of simplicity. When variables are of different nature, this won't work.
+A lot of engineering problems are of type "shape optimization wrapped in a loop wth a simulator". The shape variables live in the same space with values on the same scale. The ES is worth trying as it will handle multimodality and will guarantee speed (in Python, no need for C++), with some extra benefits of simplicity. When variables are of different nature/scale, the ES won't work.
 
-Ill-conditioning adds a lot of complexity and there are challenges which are not solvable by any algorith with any realistically computable budget, e.g. F25, F28 in CEC-2017.
+Ill-conditioning adds complexity and there are challenges which are not solvable by any algorithm with any realistically computable budget, e.g. F25, F28 in CEC-2017.
 
-One way is to stick to the ES, but get equipped with extreme patience and dedication. Decrease the step size and increase the budget, both dramatically, at least 10000x, depending how bad ill-conditioning is.
-
-A better way is matrices (pycma), which is roughly "unrotate and rescale" adaptively, but this still does not nail the CEC-2017 composites after a decade of research. What if the mixing is not just a single matrix, what if it does not use matrices at all?
+The matrix way (pycma), is roughly "unrotate and rescale" adaptively, but this still does not nail the CEC-2017 composites after a decade of research. We get into trouble when multiple matrices are used to mix variables. What if the problem is even harder, like ill-conditioning is spread through layers of nonlinearities?
 
 What is interesting is that differential evolution handles the composites better, without matrices, but better here is not much better, just a tiny signal for a more viable direction to explore.
-
-
 
