@@ -469,8 +469,17 @@ This needs more testing and it can go on and on, but I better stop here.
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the basic ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. 
+I got sidetracked. The main idea was to share a surprise pulled by the ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. 
 
-I would recommend pycma's CMAES for "Bayesian optimization". Inside as the optimizer of a so called acquisition function, or as a stand-alone Bayesian optimization algorithm. It is very frugal with evaluations and remains the most tested algorithm on the planet. 
+A lot of engineering problems are of type "shape optimization wrapped in a loop wth a simulator". The shape variables live in the same space with values on the same scale. The ES is worth trying as it will handle tough multimodality, and will guarantee speed (in Python, no need for C++), with some extra benefits of simplicity. When variables are of different nature, this won't work.
 
-Minion's ARRDE is clearly better than pycma's BIPOP-aCMAES on the most difficult composites of CEC-2017, when one can afford very large cost function evaluation budgets such as 1e8xD and beyond.
+Ill-conditioning adds a lot of complexity and there are challenges which are not solvable by any algorith with any realistically computable budget, e.g. F25, F28 in CEC-2017.
+
+One way is to stick to the ES, but get equipped with extreme patience and dedication. Decrease the step size and increase the budget, both dramatically, at least 10000x, depending how bad ill-conditioning is.
+
+A better way is matrices (pycma), which is roughly "unrotate and rescale" adaptively, but this still does not nail the CEC-2017 composites after a decade of research. What if the mixing is not just a single matrix, what if it does not use matrices at all?
+
+What is interesting is that differential evolution handles the composites better, without matrices, but better here is not much better, just a tiny signal for a more viable direction to explore.
+
+
+
