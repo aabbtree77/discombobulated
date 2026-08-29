@@ -453,15 +453,30 @@ Increasing evals to 500M can be critical:
 | 20260824 | 2800 | 2800 | 2800 |
 
 The zero inclusion does not change anything with these two seeds.
- 
-All the major conclusions are the opposite to the ones in Test 1!
 
-### Further Tests
+### Further ARRDE Tests
 
 F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. I have made a modification (call it "M3") which reaches f=2700 in 500M evals.
 
 F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
+Notice that F24 and F25 are night and day: 
+
+F24 CEC-2017: restarts are critical (10 is not enough), longer runs do not improve anything, 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
+
+F25 CEC-2017: restarts are still needed (10 is too much), very long runs are essential, 1B evals still do not solve the problem (f=2700, fopt=2500).
+
 ## P.S.
 
 I got sidetracked. The main idea was to share a surprise pulled by the ES on "Rastrigins" (quadrics mixed with harmonics). This superpower did not generalize to ill-conditioned functions.
+
+My recommendations (experience) for problems in D = 20..40:
+
+- pycma CMAES: replaces Newton and Bayesian Optimization. 10K evals.
+
+- pycma BIPOP-aCMAES: very solid black-box/baseline, often not much is gained with extreme budgets. 10M evals.
+
+- ARRDE: better than BIPOP-aCMAES on CEC-2017 composites. More than 200M..1B evals.
+
+ARRDE does not need matrices/linear algebra, but it demands C++.
+
