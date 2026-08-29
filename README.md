@@ -456,11 +456,11 @@ The zero inclusion does not change anything with these two seeds.
  
 All the major conclusions are the opposite to the ones in Test 1!
 
-### Further Tests and Questions
+### Further Tests
 
-If someone optimized F28 CEC-2017 D=20, ARRDE would be ahead of BIPOP-aCMAES again. It would reach f=3000, BIPOP-aCMAES f=3100; fopt = 2800. The zero inclusion does nothing for F28.
+F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. I have made a modification (call it "M3") which reaches f=2700 in 500M evals.
 
-Runs with 1B evals (e.g. Seed=20260829) reveal that Minion's ARRDE reaches f=2700 on F25 CEC-2017. There is a modification (call it "M3") which allows to reach f=2700 in 500M evals, but this is hardly worth publishing/discussing.
+F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
 ## P.S.
 
