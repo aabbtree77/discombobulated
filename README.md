@@ -156,7 +156,7 @@ For 1e7xD evals the relative error is still O(1e-5).
 
 lambda=D does not reach the global optimum at all. Anything interesting starts with lambda=10D.
 
-Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAESes, the zero initial starting point won't lead the ES to the F24 optimum.
+Restart to avoid adversarial initial points. Restarting does not improve precision/convergence. However, it is essential: unlike in CMAES, a zero does not lead to the optimum.
 
 Normality is not essential, but other distributions do not improve optmization.
 
@@ -412,12 +412,12 @@ In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES 
 
  One may conclude that M1 is indeed an improvement, but the F25 test below will negate that. 
  
- Note: Minion is capable of getting into 2400 with some of these seeds, but one needs to add a zero starting point. The test uses default parameters and nothing extra added, same with the F25 below.
+ Note: Minion is capable of getting into 2400 with some of these seeds, but one needs to add a zero starting point. The test uses default parameters and nothing extra added, same with the F25 below. F24 Seed=20250306 with a zero improves Minion's ARRDE from f=2500 to f=2400. No improvement for F24 Seed=20260821.
 
  These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
  restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
 
-Increasing evals to 500M/adding zero may not improve anything:
+Increasing evals to 500M, adding a zero, may not improve anything:
 
 | Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
@@ -426,7 +426,7 @@ Increasing evals to 500M/adding zero may not improve anything:
 ### Test 2: F25 CEC-2017, D=20, 200M evals
  
  In this problem fopt = 2500, most of the strong algorithms reach ~2900, 
- but ARRDE gets into f = 2800.
+ ARRDE: f = 2800.
 
 | Seed     | M1 | M2 | Minion    |
 |----------|------|------|------|
@@ -458,29 +458,10 @@ All the major conclusions are the opposite to the ones in Test 1!
 
 ### Further Tests and Questions
 
-If someone tested F28 CEC-2017 D=20, ARRDE would be ahead of BIPOP-aCMAES again. It would reach f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
+If someone optimized F28 CEC-2017 D=20, ARRDE would be ahead of BIPOP-aCMAES again. It would reach f=3000, BIPOP-aCMAES f=3100; fopt = 2800. The zero inclusion does nothing for F28.
 
-Oddly, the inclusion of zero in the initial population may change results. 
-
-F24 Seed=20250306 with zero improves Minion's ARRDE from f=2500 to f=2400. However, F24 Seed=20260821 does not. 
-
-For F25 Seed=20260824, also F28 Seed=20250306, the zero inclusion does nothing there.
-
-Is zero critically informative about the global optimum, or it merely changes the seed to the lucky one?
-
-It looks important for F24 CEC-2017, not so much for F25/F28 CEC-2017.
-
-This needs more testing and it can go on and on, but I better stop here. 
+Runs with 1B evals (e.g. Seed=20260829) reveal that Minion's ARRDE reaches f=2700 on F25 CEC-2017. There is a modification (call it "M3") which allows to reach f=2700 in 500M evals, but this is hardly worth publishing/discussing.
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the ES on Rastrigins (variations on quadric + harmonics). This superpower did not generalize to ill-conditioned functions. 
-
-A lot of engineering problems are of type "shape optimization wrapped in a loop wth a simulator". The shape variables live in the same space with values on the same scale. The ES is worth trying as it will handle multimodality and will guarantee speed (in Python, no need for C++), with some extra benefits of simplicity. When variables are of different nature/scale, the ES won't work.
-
-Ill-conditioning adds complexity and there are challenges which are not solvable by any algorithm with any realistically computable budget, e.g. F25, F28 in CEC-2017.
-
-The matrix way (pycma), is roughly "unrotate and rescale" adaptively, but this still does not nail the CEC-2017 composites after a decade of research. We get into trouble when multiple matrices are used to mix variables. What if the problem is even harder, like ill-conditioning is spread through layers of nonlinearities?
-
-What is interesting is that differential evolution handles the composites better, without matrices, but better here is not much better, just a tiny signal for a more viable direction to explore.
-
+I got sidetracked. The main idea was to share a surprise pulled by the ES on "Rastrigins" (quadrics mixed with harmonics). This superpower did not generalize to ill-conditioned functions.
