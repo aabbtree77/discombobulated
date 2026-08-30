@@ -246,25 +246,25 @@ So this is all about multimodality and ill-conditioning.
 
 The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
 
-CEC-2017 is a bigger challenge as there are a lot of functions which are both: multimodal and ill-contioned. Except for F22, F24, and F27, F20 - F30 are beyond any known method if we require an optimizer to get close to the global optimum with, say, 1% relative error in 1B evals.
+CEC-2017 is a bigger challenge as there are a lot of functions which are both: multimodal and ill-contioned. Except for F22, F24, and F27, F20 - F30 are beyond any known method if we require an optimizer to get close to the global optimum within, say, 1% relative error in 1B evals.
 
 I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 
 ```markdown
-| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   |
-| ------------ | ------------- | ------------- | -------------- |
-| ES           | >1B           | <10M          | >200M (f=2800) |
-| BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) |
-| ARRDE        | <500K         | >200M         | >200M (f=2400) |
+| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   | F25 CEC-2017 |
+| ------------ | ------------- | ------------- | -------------- | ------------ |
+| ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900) | 
+| BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) | >200M (f=2899) |
+| ARRDE        | <500K         | >200M         | >200M (f=2400) | >1B (f=2700) |
 ```
 
-One could add F7 BBOB-2009 to remove pure Newton/gradient methods.
+One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
 
-- ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. It works only with mild condition numbers (up to ~1000, solves F18 BBOB-2009). It is sensitive w.r.t. starting points and initial sigma.
+- ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. Outstanding only with mild condition numbers (up to ~1000, still solves F18 BBOB-2009). It is sensitive w.r.t. starting points.
 
-- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to unrotate.
+- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to rescale and unrotate.
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25: ARRDE f = 2800, BIPOP-aCMAES f = 2900. Notably, the ARRDE sustains ill-conditioning without matrices.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25: ARRDE f = 2700, BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
 ## Anything Better Out There?
 
@@ -278,7 +278,9 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
 - Dikshant et al. (2026) [RDEx-CASK: Cauchy Mutation, Archive, and Stagnation Kick for RDEx-CSOP](https://arxiv.org/abs/2605.09652)
 
-- Ryoji Tanabe and Alex Fukunaga (2020) [How Far Are We From an Optimal, Adaptive DE?](https://arxiv.org/abs/2010.01032)
+- Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)
+
+The last report includes Table 2 which is also an ablation analysis and shows how differential evolution has been improved with about four ideas since 2009 up to 2022. It looks like the progress stalls around 2017, but now it is a new game with AI.
 
 ### CMAES Mods?
 
@@ -383,100 +385,27 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 [Farewell to matrices and convergence proofs.](https://github.com/CMA-ES/pycma/discussions/367)
 
-## Testing ARRDE
+### Further Tests
 
-At the moment I have two variants of my own "improved" ARRDE, call them M1 and M2, but do they improve Minion? 
-
-This space of super tuned algorithms is very demanding to test. One needs harder problems to discern the cases, they in turn demand big eval budgets (a lot of computational time), and the algorithms turn out to be very sensitive to random seeds which I simply choose as dates here.
-
-### Test 1: F24 CEC-2017, D=20, 200M evals
-
-Single optimization is already painfully slow, ~1000s.
-
-In this problem fopt = 2400, f = 2500 is reached by any strong variant of CMAES or DE.
-
-| Seed     | M1 | M2 | Minion    |
-|----------|------|------|------|
-| 20250306 | 2500 | 2500 | 2500 |
-| 20260818 | 2500 | 2500 | 2500 |
-| 20260820 | 2500 | 2500 | 2500 |
-| 20260821 | 2500 | 2500 | 2500 |
-| 20260822 | 2500 | 2500 | 2500 |
-| 20260823 | 2500 | 2500 | 2500 |
-| 20260824 | 2500 | 2500 | 2500 |
-| 20260825 | 2400 | 2500 | 2500 |
-| 20260826 | 2400 | 2500 | 2500 |
-| 20260827 | 2500 | 2500 | 2500 |
-| 20260828 | 2500 | 2500 | 2500 |
-| 20260829 | 2500 | 2500 | 2500 |
-
- One may conclude that M1 is indeed an improvement, but the F25 test below will negate that. 
- 
- Note: Minion is capable of getting into 2400 with some of these seeds, but one needs to add a zero starting point. The test uses default parameters and nothing extra added, same with the F25 below. F24 Seed=20250306 with a zero improves Minion's ARRDE from f=2500 to f=2400. No improvement for F24 Seed=20260821.
-
- These independent runs with different seed numbers show the need for at least 200M evals and O(10) restarts to discern ARRDE from BIPOP-aCMAES, which is at least 2B evals or 1e8xD. This is a lot. On the positive side,
- restarts are parallelizable. However, the non-parallelizable part is already taking 1000s.
-
-Increasing evals to 500M, adding a zero, may not improve anything:
-
-| Seed     | M1 | M2 | Minion    |
-|----------|------|------|------|
-| 20260829 | 2500 | 2500 | 2500 | 
-
-### Test 2: F25 CEC-2017, D=20, 200M evals
- 
- In this problem fopt = 2500, most of the strong algorithms reach ~2900, 
- ARRDE: f = 2800.
-
-| Seed     | M1 | M2 | Minion    |
-|----------|------|------|------|
-| 20250306 | 2899 | 2899 | 2800 |
-| 20260818 | 2800 | 2899 | 2800 |
-| 20260820 | 2800 | 2800 | 2899 |
-| 20260821 | 2899 | 2899 | 2899 |
-| 20260822 | 2899 | 2899 | 2899 |
-| 20260823 | 2899 | 2899 | 2800 |
-| 20260824 | 2899 | 2899 | 2899 |
-| 20260825 | 2899 | 2899 | 2899 |
-| 20260826 | 2800 | 2899 | 2800 |
-| 20260827 | 2800 | 2800 | 2800 |
-| 20260828 | 2800 | 2899 | 2800 |
-| 20260829 | 2899 | 2800 | 2800 |
-
-Minion's ARRDE required the least number of restarts here.
-
-Increasing evals to 500M can be critical:
-
-| Seed     | M1 | M2 | Minion    |
-|----------|------|------|------|
-| 20260821 | 2899 | 2899 | 2800 |
-| 20260824 | 2800 | 2800 | 2800 |
-
-The zero inclusion does not change anything with these two seeds.
-
-### Further ARRDE Tests
-
-F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. I have made a modification (call it "M3") which reaches f=2700 in 500M evals.
+F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. I have made a modification (call it "M1") which reaches f=2700 in 500M evals. It seems nearly impossible to get below 2700.
 
 F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
-Notice that F24 and F25 are night and day: 
+F24 CEC-2017: restarts are critical, at least O(10) are needed, 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
 
-F24 CEC-2017: restarts are critical (10 is not enough), longer runs do not improve anything, 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
-
-F25 CEC-2017: restarts are still needed (10 is too much), very long runs are essential, 1B evals still do not solve the problem (f=2700, fopt=2500).
+F25 CEC-2017: restarts may not be needed, but very long runs become essential. 1B evals still do not solve the problem (f=2700, fopt=2500).
 
 ## P.S.
 
-I got sidetracked. The main idea was to share a surprise pulled by the ES on "Rastrigins" (quadrics mixed with harmonics). This superpower did not generalize to ill-conditioned functions.
+I got sidetracked. The main idea was to share a surprise pulled by the ES on "Rastrigins" (quadrics mixed with harmonics). It is likely to be the best algorithm for such multimodals as it does not need any complex CMAES machinery, matches CMAES performance with evals, and beats all the DEs including ARRDE.
 
-My recommendations (experience) for problems in D = 20..40:
+This superpower does not generalize to ill-conditioned functions which is a very complex and computationally demanding domain.
 
-- pycma CMAES: replaces Newton and Bayesian Optimization. 10K evals.
+My recommendations (experience) for problems in D = 20...40:
 
-- pycma BIPOP-aCMAES: very solid black-box/baseline, often not much is gained with extreme budgets. 10M evals.
+- pycma CMAES: ~10K evals. "Bayesian Optimization".
 
-- ARRDE: better than BIPOP-aCMAES on CEC-2017 composites. More than 200M..1B evals.
+- pycma BIPOP-aCMAES: ~10M evals. A solid and frugal DFO baseline, if not the state of the art.
 
-ARRDE does not need matrices/linear algebra, but it demands C++.
+- Minion ARRDE: beyond 200M...1B evals. The state of the art.
 
