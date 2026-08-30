@@ -251,11 +251,11 @@ CEC-2017 is a bigger challenge as there are a lot of functions which are both: m
 I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 
 ```markdown
-| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   | F25 CEC-2017 |
-| ------------ | ------------- | ------------- | -------------- | ------------ |
-| ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900) | 
+| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   | F25 CEC-2017   |
+| ------------ | ------------- | ------------- | -------------- | -------------- |
+| ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900)   |
 | BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) | >200M (f=2899) |
-| ARRDE        | <500K         | >200M         | >200M (f=2400) | >1B (f=2700) |
+| ARRDE        | <500K         | >200M         | >200M (f=2400) | >1B (f=2700)   |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -264,7 +264,7 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to rescale and unrotate.
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. It is still better than CMAESes even on the F25: ARRDE f = 2700, BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE f = 2700, BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
 ## Anything Better Out There?
 
@@ -288,8 +288,8 @@ The last report includes Table 2 which is also an ablation analysis and shows ho
 
   Dimitar Nedanovski et al. (2026) [MSC-CMA-ES: Structure-Aware Restarts for CMA-ES via Cyclic Nearest-Better Basin Discovery](https://arxiv.org/abs/2606.15830), [Github](https://github.com/snenovgmailcom/cma_es_project/tree/main)
 
-  It does not reach f = 2400 on F24 CEC-2017 at all and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration. 
-  
+  It does not reach f = 2400 on F24 CEC-2017 at all and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration.
+
   Default parameters, SEED = 20260825, F24 CEC-2017 D=20 got precisely f = 2500 in 200M evals, which took about 5 hours to run (a single optimization) on i7 gen4 16GB RAM. The C++ acceleration is only for clustering, pycma CMAES runs inside MSC-CMA-ES.
 
 - Another one bites the dust:
@@ -408,4 +408,3 @@ My recommendations (experience) for problems in D = 20...40:
 - pycma BIPOP-aCMAES: ~10M evals. A solid and frugal DFO baseline, if not the state of the art.
 
 - Minion ARRDE: beyond 200M...1B evals. The state of the art.
-
