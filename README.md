@@ -254,9 +254,10 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   | F25 CEC-2017   |
 | ------------ | ------------- | ------------- | -------------- | -------------- |
 | ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900)   |
-| BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) | >200M (f=2899) |
-| ARRDE        | <500K         | >200M         | >200M (f=2400) | >1B (f=2700)   |
-| M1           |               |               |                | >500M (f=2600) |
+| BIPOP-aCMAES | <50K          | <10M          | =200M (f=2500) | =200M (f=2899) |
+| ARRDE        | <500K         | >200M         | >200M (f=2400) | =1B (f=2700)   |
+|              |               |               |                | =2B (f=2800)   |
+| M1           |               |               |                | =500M (f=2600) |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -265,7 +266,7 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F24 - F30 CEC-2017 when there is no single coordinate system to rescale and unrotate.
 
-- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE f = 2700, BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
+- ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE may reach f = 2700, but this is not stable and even 2B evals often lead to 2800. BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
 ## Anything Better Out There?
 
@@ -291,7 +292,7 @@ The last report includes Table 2 which is also an ablation analysis and shows ho
 
   It does not reach f = 2400 on F24 CEC-2017 at all and does not look any different than BIPOP-aCMAES, despite the paper hinting that it could be interesting on the CEC-2017 composites. Very slow even with the C++ acceleration.
 
-  Default parameters, SEED = 20260825, F24 CEC-2017 D=20 got precisely f = 2500 in 200M evals, which took about 5 hours to run (a single optimization) on i7 gen4 16GB RAM. The C++ acceleration is only for clustering, pycma CMAES runs inside MSC-CMA-ES.
+  Default parameters, seed = 20260825, F24 CEC-2017 D=20 got precisely f = 2500 in 200M evals, which took about 5 hours to run (a single optimization) on i7 gen4 16GB RAM. The C++ acceleration is only for clustering, pycma CMAES runs inside MSC-CMA-ES.
 
 - Another one bites the dust:
 
@@ -330,7 +331,7 @@ I did not get anything from DAs on CEC2017 F24 - F30 in D=20. Also tried [this c
 
 Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
 
-Minion's result in D=10 depends on the starting point and D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, SEED = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
+Minion's result in D=10 depends on the starting point and D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, seed = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
 ### BBOB-2009
 
@@ -388,7 +389,7 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 ### Further Tests
 
-F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. 
+F25 CEC-2017 D=20, 1B evals: ARRDE f=2700, seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM.
 
 F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
@@ -396,9 +397,22 @@ F24 CEC-2017: restarts are critical, at least O(10) are needed, 200M evals are s
 
 F25 CEC-2017: restarts may not be needed, but very long runs become essential. 1B evals still do not solve the problem (f=2700, fopt=2500).
 
+ARRDE behaves oddly at very large evals, i.e. F25 CEC-2017 D=20:
+
+- For the same seed=20260829, 500M evals: f=2800, 1B evals: f=2700, 2B evals: f=2800.
+
+- Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
+
+- It depends on the random seed, whether zero is included in the initial population (on F24 CEC-2017), which is somewhat counter-intuitive. Initial population sizes, budgets, the number of restarts are large to remove this sensitivity.
+
+CMAES is more stable, but worse on the CEC-2017 composites.
+
 ### M1
 
 I now have an algorithm (call it "M1", details later) which reaches f=2600 in 500M evals on F25 CEC-2017 D=20.
+This is a dramatic rare improvement, possibly the best result out there, but still too early to get over-excited.
+
+TBC...
 
 ## P.S.
 
