@@ -256,6 +256,7 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900)   |
 | BIPOP-aCMAES | <50K          | <10M          | >200M (f=2500) | >200M (f=2899) |
 | ARRDE        | <500K         | >200M         | >200M (f=2400) | >1B (f=2700)   |
+| M1           |               |               |                | >500M (f=2600) |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -355,7 +356,7 @@ One exception is Baeysian Optimization (BO) as it is complex and annoyingly slow
 - Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
   BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
 
-## Classics
+## Selected Classics
 
 Early algorithms did not survive the test of time. Analysis, boundary handling did.
 
@@ -387,13 +388,17 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 ### Further Tests
 
-F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. I have made a modification (call it "M1") which reaches f=2700 in 500M evals. It seems nearly impossible to get below 2700.
+F25 CEC-2017 D=20, 1B evals: ARRDE f=2700. Seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM. 
 
 F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
 F24 CEC-2017: restarts are critical, at least O(10) are needed, 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
 
 F25 CEC-2017: restarts may not be needed, but very long runs become essential. 1B evals still do not solve the problem (f=2700, fopt=2500).
+
+### M1
+
+I now have an algorithm (call it "M1", details later) which reaches f=2600 in 500M evals on F25 CEC-2017 D=20.
 
 ## P.S.
 
@@ -403,8 +408,8 @@ This superpower does not generalize to ill-conditioned functions which is a very
 
 My recommendations (experience) for problems in D = 20...40:
 
-- pycma CMAES: ~10K evals. "Bayesian Optimization".
+- pycma CMAES: O(10K) evals. "Bayesian Optimization".
 
-- pycma BIPOP-aCMAES: ~10M evals. A solid and frugal DFO baseline, if not the state of the art.
+- pycma BIPOP-aCMAES: O(10M) evals. A solid and frugal DFO baseline, if not the state of the art.
 
 - Minion ARRDE: beyond 200M...1B evals. The state of the art.
