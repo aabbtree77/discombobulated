@@ -258,6 +258,7 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | ARRDE        | <500K         | >200M         | >200M (f=2400) | =1B (f=2700)   |
 |              |               |               |                | =2B (f=2800)   |
 | M1           |               |               |                | =500M (f=2600) |
+|              |               |               |                | =2B (f=2600)   |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -282,7 +283,7 @@ RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals)
 
 - Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)
 
-The last report includes Table 2 which is also an ablation analysis and shows how differential evolution has been improved with about four ideas since 2009 up to 2022. It looks like the progress stalls around 2017, but now it is a new game with AI.
+The last report includes Table 2 which shows how differential evolution has been improved with about four ideas since 2009 up to 2022. It looks like the progress stalls around 2017, but now it is a new game with AI.
 
 ### CMAES Mods?
 
@@ -409,21 +410,9 @@ CMAES is more stable, but worse on the CEC-2017 composites.
 
 ### M1
 
-I now have an algorithm (call it "M1", details later) which reaches f=2600 in 500M evals on F25 CEC-2017 D=20.
-This is a dramatic rare improvement, possibly the best result out there, but still too early to get over-excited.
+I now have an algorithm (call it "M1", details later) which reaches f=2600 in 500M evals on F25 CEC-2017 D=20 and
+maintains consistency with the same result for 1B and 2B evals.
+
+This is a clean improvement, possibly the best result out there on the F25. Still too early to get over-excited.
 
 TBC...
-
-## P.S.
-
-I got sidetracked. The main idea was to share a surprise pulled by the ES on "Rastrigins" (quadrics mixed with harmonics). It is likely to be the best algorithm for such multimodals as it does not need any complex CMAES machinery, matches CMAES performance with evals, and beats all the DEs including ARRDE.
-
-This superpower does not generalize to ill-conditioned functions which is a very complex and computationally demanding domain.
-
-My recommendations (experience) for problems in D = 20...40:
-
-- pycma CMAES: O(10K) evals. "Bayesian Optimization".
-
-- pycma BIPOP-aCMAES: O(10M) evals. A solid and frugal DFO baseline, if not the state of the art.
-
-- Minion ARRDE: beyond 200M...1B evals. The state of the art.
