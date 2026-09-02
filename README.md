@@ -257,8 +257,7 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | BIPOP-aCMAES | <50K          | <10M          | =200M (f=2500) | =200M (f=2899) |
 | ARRDE        | <500K         | >200M         | >200M (f=2400) | =1B (f=2700)   |
 |              |               |               |                | =2B (f=2800)   |
-| M1           |               |               |                | =500M (f=2600) |
-|              |               |               |                | =2B (f=2600)   |
+| R1           |               |               |                | =50M (f=2600)  |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -301,7 +300,7 @@ The last report includes Table 2 which shows how differential evolution has been
 
   No difference, except that it is much faster to test than pycma and MSC-CMA-ES and is integrated into [Minion](https://github.com/khoirulmuzakka/Minion).
 
-- LLMs are everywhere now. This one was quite early and used local minimal models to "explain" concrete optimization results after the run. This is not very useful per se, but might stimulate some thinking towards embracing a brave new world:
+- LLMs are everywhere now. This one was quite early and used local minimal models to "explain" concrete optimization results after the run. This is not very useful per se, but might stimulate some thinking towards embracing a new world:
 
   Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
   Large Language Models](https://arxiv.org/abs/2407.08331)
@@ -442,9 +441,8 @@ ARRDE behaves oddly for very large budgets, i.e. F25 CEC-2017 D=20:
 
 ### M1
 
-I have developed an algorithm (call it "M1", details later) which reaches f=2600 in 100M evals on F25 CEC-2017 D=20 and
-maintains consistency with the same result for 1B and 2B evals, but this is still not reaching fopt=2500.
+I now have an algorithm (call it "R1", details later) which reaches f=2600 in 50M evals on F25 CEC-2017 D=20.
 
-It also solves F28 CEC-2017 in just 500M evals (f=2812 vs f=3000 by ARRDE).
+It also solves F28 CEC-2017.
 
 TBC...
