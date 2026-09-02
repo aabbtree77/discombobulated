@@ -336,9 +336,7 @@ Minion's result in D=10 depends on the starting point and D=10 does not generali
 
 ### BBOB-2009
 
-Nowadays it is much faster to git clone and test an algorithm than [to decipher any terse report](https://github.com/CMA-ES/pycma/discussions/370).
-
-One exception is Baeysian Optimization (BO) as it is complex and annoyingly slow to run. I would avoid this domain entirely as those tiny budgets lack stability, and there is no convergence/critical mass on any existing algorithm since 1970s. [Use scipy SLSQP/BFGS with pycma CMAES](https://github.com/CMA-ES/pycma/discussions/364), it is very frugal with evals and far more developed than any BO.
+Nowadays it is much faster to git clone and test an algorithm than [to decipher a pdf report](https://github.com/CMA-ES/pycma/discussions/370), but still interesting to see benchmarks as they indicate what works and what does not.
 
 - Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
 
@@ -388,31 +386,65 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 [Farewell to matrices and convergence proofs.](https://github.com/CMA-ES/pycma/discussions/367)
 
-### Further Tests
+## Evaluation Budgets
+
+[ARRDE 2026:](https://arxiv.org/pdf/2511.18429)
+
+_"For CEC2017, the algorithm was tested on 29 problems at dimensions 10, 30, 50, and 100, with the maximum number of function evaluations set to Nmax = 10^4 × D. Following the CEC2017 guidelines, problem
+F2 (the shifted and rotated Rastrigin function) was excluded due to numerical instability in higher dimensions. For CEC2020, the algorithm was evaluated on 10 problems at dimensions 5, 10, 15, and 20, with the
+corresponding evaluation budgets set to Nmax = 5 × 10^4, 10^6, 3 × 10^6, and 10^7. For CEC2022, the algorithm
+was tested on 12 problems at dimensions 10 and 20, using Nmax = 2 × 10^5 and 10^6, respectively. It is worth
+noting that although the CEC2017 suite contains higher-dimensional problems, it uses substantially lower
+evaluation budgets compared with the CEC2020 and CEC2022 suites. Conversely, CEC2020 represents the
+opposite extreme: relatively low-dimensional problems paired with exceptionally large evaluation budgets._
+
+_For the CEC2019 100-Digit Challenge, algorithms are evaluated under an effectively unlimited time budget. In this study, we impose a practical limit of Nmax = 10^8. The dimensionality of the problems ranges
+from 9 to 18, with most being 10-dimensional. For each problem, the number of correctly retrieved digits (up
+to the 10th decimal place) is recorded, and the final ranking is determined based on the average number of
+correct digits achieved in the best 25 out of 51 runs._
+
+_The CEC2011 real-world optimization suite comprises 22 problems with dimensionalities ranging from
+6 to 212. These problems are derived from simplified formulations of practical engineering tasks, including
+FM sound wave parameter estimation, Lennard–Jones and Tersoff potential minimization, spread-spectrum
+radar polyphase code design, transmission network expansion planning (TNEP), transmission pricing, circular antenna array design, static and dynamic economic load dispatch (ELD/DED), hydrothermal scheduling, and spacecraft trajectory optimization for the Messenger and Cassini 2 missions. Several of the original
+problems include inequality constraints in addition to bound constraints. Since our focus in this study is
+on bound-constrained optimization, these inequality constraints are omitted. Despite their simplifications,
+many CEC2011 problems remain very challenging due to their high dimensionality and multimodal landscapes. Following the CEC2011 benchmarking protocol, we evaluate all algorithms under three functionevaluation budgets: Nmax = 5 × 10^4
+, 10^5, and 1.5 × 10^5."_
+
+Kindergarten budgets, but they still advance the DFO algorithms, paradoxically.
+
+### Testing ARRDE
 
 F25 CEC-2017 D=20, 1B evals: ARRDE f=2700, seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM.
 
 F28 CEC-2017 D=20, <=200M evals: ARRDE f=3000, BIPOP-aCMAES f=3100; fopt = 2800.
 
-F24 CEC-2017: restarts are critical, at least O(10) are needed, 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
+F24 CEC-2017:
 
-F25 CEC-2017: restarts may not be needed, but very long runs become essential. 1B evals still do not solve the problem (f=2700, fopt=2500).
+- restarts are critical, at least O(10) are needed,
 
-ARRDE behaves oddly at very large evals, i.e. F25 CEC-2017 D=20:
+- 200M evals are sufficient to solve the problem completely (f=fopt=2400) when the seed is good.
+
+F25 CEC-2017:
+
+- restarts may not be needed,
+
+- 1B evals still do not solve the problem (f=2700, fopt=2500).
+
+ARRDE behaves oddly for very large budgets, i.e. F25 CEC-2017 D=20:
 
 - For the same seed=20260829, 500M evals: f=2800, 1B evals: f=2700, 2B evals: f=2800.
 
 - Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
 
-- It depends on the random seed, whether zero is included in the initial population (on F24 CEC-2017), which is somewhat counter-intuitive. Initial population sizes, budgets, the number of restarts are large to remove this sensitivity.
-
-CMAES is more stable, but worse on the CEC-2017 composites.
+- More sensitive to seeds and zero inclusion than CMAES.
 
 ### M1
 
-I now have an algorithm (call it "M1", details later) which reaches f=2600 in 500M evals on F25 CEC-2017 D=20 and
-maintains consistency with the same result for 1B and 2B evals.
+I have developed an algorithm (call it "M1", details later) which reaches f=2600 in 100M evals on F25 CEC-2017 D=20 and
+maintains consistency with the same result for 1B and 2B evals, but this is still not reaching fopt=2500.
 
-This is a clean improvement, possibly the best result out there on the F25. Still too early to get over-excited.
+It also solves F28 CEC-2017 in just 500M evals (f=2812 vs f=3000 by ARRDE).
 
 TBC...
