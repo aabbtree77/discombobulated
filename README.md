@@ -440,17 +440,21 @@ ARRDE is inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed=202
 
 Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
 
+On F24 CEC-2017, very sensitive to seeding or whether zero is included in the initial population.
+
 ### Conclusions
 
 F24, F28 CEC-2017 are solved problems. F25 is not.
 
 Everything is high dimensional, nonlinear, and nontrivial. F24 may need 2B evals, while F28 only 10M.
 
-There is some story to be told about my R1 algorithm which I deliberately skipped here, as well as about the role of AI in this space, and routine creativity functors.
+There is some story to be told about my R1 algorithm which I deliberately skipped here. How to improve some of the best algorithms routinely.
 
 Might compete in CEC-2027, but frankly I am more interested in how to get below 2600 on F25.
 
-It is not that difficult to speed up the codes, reduce evals, esp. with AI, but the challenge is how to make progress when stuck.
+The challenge is how to make progress when being stuck.
+
 Escape where, refine what, for how long?
 
+In logic we backtrack, but in the continuous space how to avoid returning to the same place?
 
