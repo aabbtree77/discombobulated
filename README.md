@@ -268,6 +268,8 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE may reach f = 2700, but this is not stable and even 2B evals often lead to 2800. BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
+- R1: my own development (details later). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, but it does not solve F24 in 500M evals or at all.
+
 ## Anything Better Out There?
 
 ### Newest DEs?
@@ -431,18 +433,24 @@ F25 CEC-2017:
 
 - 1B evals still do not solve the problem (f=2700, fopt=2500).
 
-ARRDE behaves oddly for very large budgets, i.e. F25 CEC-2017 D=20:
+Making significant progress on F24 does not imply its transfer on F25 and vice versa.
 
-- For the same seed=20260829, 500M evals: f=2800, 1B evals: f=2700, 2B evals: f=2800.
+ARRDE is inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed=20260829,
+500M evals: f=2800, 1B evals: f=2700, 2B evals: f=2800. 
 
-- Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
+Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
 
-- More sensitive to seeds and zero inclusion than CMAES.
+### Conclusions
 
-### M1
+F24, F28 CEC-2017 are solved problems. F25 is not.
 
-I now have an algorithm (call it "R1", details later) which reaches f=2600 in 50M evals on F25 CEC-2017 D=20.
+Everything is high dimensional, nonlinear, and nontrivial. F24 may need 2B evals, while F28 only 10M.
 
-It also solves F28 CEC-2017.
+There is some story to be told about my R1 algorithm which I deliberately skipped here, as well as about the role of AI in this space, and routine creativity functors.
 
-TBC...
+Might compete in CEC-2027, but frankly I am more interested in how to get below 2600 on F25.
+
+It is not that difficult to speed up the codes, reduce evals, esp. with AI, but the challenge is how to make progress when stuck.
+Escape where, refine what, for how long?
+
+
