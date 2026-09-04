@@ -442,19 +442,17 @@ Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12h
 
 On F24 CEC-2017, very sensitive to seeding or whether zero is included in the initial population.
 
-### Conclusions
+### Remarks
 
-F24, F28 CEC-2017 are solved problems. F25 is not.
+- There exists an algorithm ("R1", unpublished) which completely solves F24, F28 CEC-2017 and makes significant progress on F25.
 
-Everything is high dimensional, nonlinear, and nontrivial. F24 may need 2B evals, while F28 only 10M.
+- You won't get very far with restarts, autotuning, AI, massive budgets.
 
-There is some story to be told about my R1 algorithm which I deliberately skipped here. How to improve some of the best algorithms routinely.
+- No theory, no system, no predictions. F24 may need 2B evals, while F28 only 10M. F25 could be non-solvable.
 
-Might compete in CEC-2027, but frankly I am more interested in how to get below 2600 on F25.
+- In competitions, reaching mediocre values faster on average is better than solving the problem. Sometimes the two correlate.
 
-The challenge is how to make progress when being stuck.
+- How to get out of the local optimum? Escape where, refine what, for how long?
 
-Escape where, refine what, for how long?
-
-In logic we backtrack, but in the continuous space how to avoid returning to the same place?
+- In logic we backtrack. How to avoid returning to the same place in R^20?
 
