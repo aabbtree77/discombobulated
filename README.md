@@ -257,7 +257,7 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | BIPOP-aCMAES | <50K          | <10M          | =200M (f=2500) | =200M (f=2899) |
 | ARRDE        | <500K         | >200M         | >200M (f=2400) | =1B (f=2700)   |
 |              |               |               |                | =2B (f=2800)   |
-| R1           |               |               |                | =50M (f=2600)  |
+| R6           |               |               |                | =50M (f=2600)  |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -268,7 +268,9 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE may reach f = 2700, but this is not stable and even 2B evals often lead to 2800. BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
-- R1: my own development (details later). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, but it does not solve F24 in 500M evals or at all.
+- R6: my own development (details later). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, and F24 with at least 200M evals.
+
+Scroll down for more benchmarking on CEC-2017.
 
 ## Anything Better Out There?
 
@@ -440,19 +442,142 @@ ARRDE is inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed=202
 
 Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
 
-On F24 CEC-2017, very sensitive to seeding or whether zero is included in the initial population.
+On F24 CEC-2017, picky with seeding or whether zero is included in the initial population.
 
-### Remarks
+### Results with Selected CEC-2017 Composites
 
-- There exists an algorithm ("R1", unpublished) which completely solves F24, F28 CEC-2017 and makes significant progress on F25.
+D=20, seed=20260829, 200M evals.
 
-- You won't get very far with restarts, autotuning, AI, massive budgets.
+| Place | Algorithm      | F24   | F25   | F28   |
+|-------|----------------|-------|-------|-------|
+| 1     | R6             | 2438  | 2600  | 2804  |
+| 2     | ARRDE          | 2400  | 2899  | 3000  |
+| 3     | BIPOP-aCMAES   | 2800  | 2910  | 3100  |
 
-- No theory, no system, no predictions. F24 may need 2B evals, while F28 only 10M. F25 could be non-solvable.
+- R6: solves F24, F28, makes significant progress on F25.
 
-- In competitions, reaching mediocre values faster on average is better than solving the problem. Sometimes the two correlate.
+- ARRDE: solves F24. Can be pushed to 2700 on F25 with 500M-2B evals.
+
+- BIPOP-aCMAES lags behind already on easier F21 and F22 (not shown here, stays ~2300 in the both cases).
+
+Not much progress with F23, F26, F27, F29, F30, but I also did not spend much time on these. Every cost function is a separate world. One can do runs with 5B evals testing for months and going nowhere from the BIPOP-aCMAES baseline. These are tough cases. 
+
+Notice that the ARRDE is a very recent algorithm and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. The R6 improves the ARRDE.
+
+When looking at the content of these composites (see the lists below), the usual suspect causing most trouble could be Modified Schwefel's Function. However, F22 CEC-2017 is already solvable, so focusing on that function alone might be dubious.
+
+## CEC-2017 Composites
+
+These are the hardest cost functions of the benchmark. 
+
+Firstly, the subsets of these deceptive functions in a given list are mixed into hybrids.
+
+In turn, these hybrids are rotated and scaled with different matrices and further mixed with some distance based weighing.
+
+Any single function is often already deceptive: multimodal, sometimes non-differentiable. It can already be ill-conditioned before being mixed into a hybrid. The latter in turn will get their own ill-conditioning.
+
+There are separate research works with a deep focus on some of them, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches.
+
+F30:
+
+1. Rastrigin's Function
+2. Griewank's Function
+3. Schaffer’s F6 Function
+4. Rosenbrock's Function
+5. Katsuura Function
+6. Ackley's Function
+7. Expanded Griewank's plus Rosenbrock's Function
+8. Modified Schwefel's Function
+
+F29:
+
+1. Rastrigin's Function
+2. Griewank's Function
+3. Schaffer’s F6 Function
+4. Rosenbrock's Function
+5. High Conditioned Elliptic Function
+6. Ackley's Function
+7. HGBat Function
+8. Discus Function
+9. Bent Cigar Function
+10. Expanded Griewank's plus Rosenbrock's Function
+11. Weierstrass Function
+
+
+F28:
+
+1. Rastrigin's Function
+2. Griewank's Function
+3. Rosenbrock's Function
+4. Schaffer’s F6 Function
+5. Katsuura Function
+6. Ackley's Function
+
+F27:
+
+1. HGBat Function
+2. Rastrigin's Function
+3. Modified Schwefel's Function
+4. Bent-Cigar Function
+5. High Conditioned Elliptic Function
+6. Expanded Schaffer's F6 Function
+
+F26:
+
+1. Expanded Schaffer's F6 Function
+2. Modified Schwefel's Function
+3. Griewank's Function
+4. Rosenbrock's Function
+5. Rastrigin's Function
+
+F25:
+
+1. Rastrigin's Function
+2. Happy Cat Function
+3. Ackley's Function
+4. Discus Function
+5. Rosenbrock's Function
+
+F24:
+
+1. Ackley's Function
+2. High Conditioned Elliptic Function
+3. Griewank's Function
+4. Rastrigin's Function
+
+F23:
+
+1. Rosenbrock's Function
+2. Ackley's Function
+3. Modified Schwefel's Function
+4. Rastrigin's Function
+
+F22:
+
+1. Rastrigin's Function
+2. Griewank's Function
+3. Modified Schwefel's Function
+
+F21:
+
+1. Rosenbrock's Function
+2. High Conditioned Elliptic Function
+3. Rastrigin's Function
+
+### Random Thoughts
+
+- It is unlikely that one will get very far with restart schedules, autoresearch, RL, AI, massive budgets.
+
+- No theory, no system, no predictions. F24 may need 200M-2B evals, while F28 only 10M. F25 could be non-solvable.
+
+- CEC competitions are more about reaching suboptimal values faster on average. They are not about solving the problem. Sometimes the two correlate.
+
+- ARRDE is the first algorithm to actually solve a CEC-2017 composite (F24). This comes after a decade! Can you imagine how many people are trying to improve DFO. It is one giant Monte Carlo...
+
+- R6 solves F24 and F28 (the latter in just 10M evals). It also sets a high bar for F25 (f=2600 in 50M evals).
 
 - How to get out of the local optimum? Escape where, refine what, for how long?
 
-- In logic we backtrack. How to avoid returning to the same place in R^20?
+- In logic we backtrack. How to do that in R^20?
+
 
