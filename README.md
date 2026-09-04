@@ -437,12 +437,16 @@ F25 CEC-2017:
 
 Making significant progress on F24 does not imply its transfer on F25 and vice versa.
 
-ARRDE is inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed=20260829,
-500M evals: f=2800, 1B evals: f=2700, 2B evals: f=2800. 
+ARRDE can be inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed=20260829:
 
-Beyond 500M evals it slows down in time, 500M takes ~1 hour, 1B ~5hours, 2B ~12hours.
+- 500M evals: f=2800, 
+- 1B evals: f=2700, 
+- 2B evals: f=2800. 
 
-On F24 CEC-2017, picky with seeding or whether zero is included in the initial population.
+On F24 CEC-2017, it is picky with seeding or whether zero is included in the initial population.
+
+It is an already very heavily optimized algorithm which adds to the jSO algorithm global phases 
+with some intricate refinement machinery via merged local intervals acting as [Tabu Search](https://github.com/zarankumar/tabu-search).
 
 ### Results with Selected CEC-2017 Composites
 
@@ -458,19 +462,23 @@ D=20, seed=20260829, 200M evals.
 
 - ARRDE: solves F24. Can be pushed to 2700 on F25 with 500M-2B evals.
 
-- BIPOP-aCMAES lags behind already on easier F21 and F22 (not shown here, stays ~2300 in the both cases).
+- BIPOP-aCMAES lags already on F21 and F22 (not shown here, stays ~2300 in the both cases).
 
-Not much progress with F23, F26, F27, F29, F30, but I also did not spend enough time on these. Every cost function is a separate world. One can do runs with 5B evals testing for months and not going further than the BIPOP-aCMAES baseline as this is a very smart algorithm. These are tough cases. 
+Not much progress with F21-F23 (F22 looks solvable beyond 200M evals), F26, F27, F29, F30, but I also did not spend enough time on these. Every cost function is a separate world. 
 
-Notice that the ARRDE is a very recent algorithm and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. R6 improves ARRDE.
+One can do runs with 5B evals testing for months without going further than BIPOP-aCMAES which is a very smart algorithm. All of the composites are tough cases. 
 
-When looking at the content of these composites (see the lists below), the usual suspect causing most trouble could be Modified Schwefel's Function. However, F22 CEC-2017 is already solvable, so focusing on that function alone might be dubious.
+Notice that the ARRDE is a recent algorithm (2026) and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. R6 improves ARRDE.
+
+When looking at the content of these composites (see the lists below), the usual suspect could be modified Schwefel's function. However, F22 CEC-2017 is solvable, so focusing on that function alone might be dubious.
 
 ## CEC-2017 Composites
 
-These are the hardest cost functions of the benchmark. 
+These are the hardest cost functions of the benchmark. Do not run anything classical on them. All of the 3rd and 4th generation DEs fail on them. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
 
-Firstly, the subsets of these deceptive functions in a given list are mixed into hybrids.
+What are these challenges?
+
+Firstly, the subsets of already deceptive functions (in each given list) are mixed into hybrids.
 
 In turn, these hybrids are rotated and scaled with different matrices and further mixed with some distance based weighing.
 
