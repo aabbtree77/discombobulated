@@ -454,15 +454,15 @@ D=20, seed=20260829, 200M evals.
 | 2     | ARRDE          | 2400  | 2899  | 3000  |
 | 3     | BIPOP-aCMAES   | 2800  | 2910  | 3100  |
 
-- R6: solves F24, F28, makes significant progress on F25.
+- R6: solves F24, F28, makes significant progress on F25 (in just 50M evals).
 
 - ARRDE: solves F24. Can be pushed to 2700 on F25 with 500M-2B evals.
 
 - BIPOP-aCMAES lags behind already on easier F21 and F22 (not shown here, stays ~2300 in the both cases).
 
-Not much progress with F23, F26, F27, F29, F30, but I also did not spend much time on these. Every cost function is a separate world. One can do runs with 5B evals testing for months and going nowhere from the BIPOP-aCMAES baseline. These are tough cases. 
+Not much progress with F23, F26, F27, F29, F30, but I also did not spend enough time on these. Every cost function is a separate world. One can do runs with 5B evals testing for months and not going further than the BIPOP-aCMAES baseline as this is a very smart algorithm. These are tough cases. 
 
-Notice that the ARRDE is a very recent algorithm and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. The R6 improves the ARRDE.
+Notice that the ARRDE is a very recent algorithm and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. R6 improves ARRDE.
 
 When looking at the content of these composites (see the lists below), the usual suspect causing most trouble could be Modified Schwefel's Function. However, F22 CEC-2017 is already solvable, so focusing on that function alone might be dubious.
 
@@ -568,13 +568,13 @@ F21:
 
 - It is unlikely that one will get very far with restart schedules, autoresearch, RL, AI, massive budgets.
 
-- No theory, no system, no predictions. F24 may need 200M-2B evals, while F28 only 10M. F25 could be non-solvable.
+- No theory, no system, no predictions. F24 may need 200M-2B evals, while F28 only 10M. F25 could be non-solvable. F22 is easier than F21. Be my guest establishing these rigorously...
 
 - CEC competitions are more about reaching suboptimal values faster on average. They are not about solving the problem. Sometimes the two correlate.
 
-- ARRDE is the first algorithm to actually solve a CEC-2017 composite (F24). This comes after a decade! Can you imagine how many people are trying to improve DFO. It is one giant Monte Carlo...
+- ARRDE is the first algorithm to actually solve a CEC-2017 composite (F24, we could also add F22 to some extent). This comes after a decade.
 
-- R6 solves F24 and F28 (the latter in just 10M evals). It also sets a high bar for F25 (f=2600 in 50M evals).
+- R6 now solves F24 and F28 (the latter in just 10M evals). It also sets a high bar for F25 (f=2600 in 50M evals).
 
 - How to get out of the local optimum? Escape where, refine what, for how long?
 
