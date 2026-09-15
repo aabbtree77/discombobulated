@@ -584,8 +584,4 @@ F21:
 
 - R6 now solves F24 and F28 (the latter in just 10M evals). It also sets a high bar for F25 (f=2600 in 50M evals).
 
-- How to get out of the local optimum? Escape where, refine what, for how long?
-
-- In logic we backtrack. How to do that in R^20?
-
 
