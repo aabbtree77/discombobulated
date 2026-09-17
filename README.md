@@ -255,9 +255,9 @@ I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 | ------------ | ------------- | ------------- | -------------- | -------------- |
 | ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900)   |
 | BIPOP-aCMAES | <50K          | <10M          | =200M (f=2500) | =200M (f=2899) |
-| ARRDE        | <500K         | >200M         | >200M (f=2400) | =1B (f=2700)   |
+| ARRDE        | <500K         | =200M         | =200M (f=2400) | =1B (f=2700)   |
 |              |               |               |                | =2B (f=2800)   |
-| R6           |               |               |                | =50M (f=2600)  |
+| R6           |               |               |                | =10M (f=2600)  |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -268,7 +268,7 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - ARRDE: pushes the frontier, but demands C++ and budgets larger than 1e7xD to differentiate itself from pycma CMAES. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 yet. It is still better than CMAESes even on the F25: ARRDE may reach f = 2700, but this is not stable and even 2B evals often lead to 2800. BIPOP-aCMAES f = 2899. Notably, ARRDE sustains ill-conditioning without matrices.
 
-- R6: my own development (details later). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, and F24 with at least 200M evals.
+- R6: my own development (too lazy to write about it). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, and F24 with at least 200M evals.
 
 Scroll down for more benchmarking on CEC-2017.
 
@@ -387,7 +387,7 @@ Early algorithms did not survive the test of time. Analysis, boundary handling d
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
-[Farewell to matrices and convergence proofs.](https://github.com/CMA-ES/pycma/discussions/367)
+Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367).
 
 ## Evaluation Budgets
 
@@ -480,7 +480,7 @@ What are these challenges?
 
 Firstly, the subsets of already deceptive functions (in each given list) are mixed into hybrids.
 
-In turn, these hybrids are rotated and scaled with different matrices and further mixed with some distance based weighing.
+In turn, these hybrids are rotated and scaled with different matrices and further mixed with some distance based weights.
 
 Any single function is often already deceptive: multimodal, sometimes non-differentiable. It can already be ill-conditioned before being mixed into a hybrid. The latter in turn will get their own ill-conditioning.
 
@@ -572,16 +572,18 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
-### Random Thoughts
+### Conclusion so far
 
-- It is unlikely that one will get very far with restart schedules, autoresearch, RL, AI, massive budgets.
+- The ARRDE is the first algorithm to solve a CEC-2017 composite. No matrices, think about it.
 
-- No theory, no system, no predictions. F24 may need 200M-2B evals, while F28 only 10M. F25 could be non-solvable. F22 is easier than F21. Be my guest establishing these rigorously...
+- Two composites are already solvable, F24 and F28. F28 turns out to be 100x less demanding, who would have thought.
 
-- CEC competitions are more about reaching suboptimal values faster on average. They are not about solving the problem. Sometimes the two correlate.
+- None of these algorithms are good. They have very few ideas and squeeze out maximal performance out of extremely tedious parameter tuning. This is the case of a severe premature over-optimization. 
 
-- ARRDE is the first algorithm to actually solve a CEC-2017 composite (F24, we could also add F22 to some extent). This comes after a decade.
+- We need the opposite: more mechanisms with fewer parameters.
 
-- R6 now solves F24 and F28 (the latter in just 10M evals). It also sets a high bar for F25 (f=2600 in 50M evals).
+- No need to get fixated on the CMAES or the ARRDE. None of them will stand the test of time, but they show that we can still make progress.
 
+TBC...
+ 
 
