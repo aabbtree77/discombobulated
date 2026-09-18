@@ -1,3 +1,17 @@
+> Three wise men from freezing North
+> Keep telling me and holding forth
+> The metal will not bring a yield
+> The game's not worth the candle, 
+> nor the labor's field
+
+> But I am planting my aluminium cucumbers, ah-ah
+> Right on a tarpaulin field
+> Yes I am planting my aluminium cucumbers, ah-ah
+> Right on a tarpaulin field
+
+> - [AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
+
+
 <p align="center">
   <img src="bbob2009vscec2017.png" alt="bbob2009 vs cec2017 as Venn diagrams with ill-cond vs multimodality" style="width: 90%; height: auto;" />
 </p>
