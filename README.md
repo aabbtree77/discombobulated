@@ -1,8 +1,7 @@
 > Three wise men from freezing North<br>
 > Keep telling me and holding forth<br>
 > The metal will not bring a yield<br>
-> The game's not worth the candle,<br> 
-> nor the labor's field<br>
+> The game's not worth the candle, nor the labor's field<br>
 ><br>
 > But I am planting my aluminium cucumbers, ah-ah<br>
 > Right on a tarpaulin field<br>
