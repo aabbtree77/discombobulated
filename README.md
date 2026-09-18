@@ -572,19 +572,27 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
-### Summary
+### Personal Notes
 
-- The ARRDE is the first algorithm to solve a CEC-2017 composite. No matrices, think about it.
+- ARRDE is the first algorithm to solve a CEC-2017 composite. No matrices, think about it.
 
 - Two composites are already solvable, F24 and F28. F28 turns out to be 100x less demanding.
 
-- F25 is solvable in D=10 with tiny budgets (<10M evals). In D=20 it does not seem to be solvable at all.
+- F25 is solvable in D=10 with tiny budgets (<10M evals). In D=20 it does not seem to be solvable at all. This casts a serious shadow on modern differential evolutions. All this list processing leads to a dead end in larger dimensions. Just like trees and anything revolving around space-partitioning turned out to be a complete cul-de-sac.
 
-- None of these modern algorithms are good. They are fragile, unpredictable, they get stuck. They bring very few ideas and squeeze out maximal performance out of extremely tedious parameter tuning. This is the case of severe premature over-optimization. 
+- CMAES, on the other hand, hits the wall already with the first layer of multiple ill-conditioned matrices under nonlinearities. Imagine layers and layers of these. Game over.
 
-- I want the opposite: more focus on mechanisms, less on tuning. The basic ES is more impressive in this sense. It solves Lunacek's bi-Rastrigin and beats the ARRDE there, and the latter is one of the finest we have in the year 2026.
+- None of these modern algorithms are good. Very few ideas, too much parameter tuning, obsession with evals instead of problem solving, declaring winners in competitions when there are no winners at all. Ranking hospitals based on average patient temperatures. 
 
-- No need to get fixated on CMAES, ARRDE, or R6 briefly show-cased here. None of them will stand the test of time.
+- The basic ES is more impressive in this sense. It solves Lunacek's bi-Rastrigin and beats ARRDE there. The latter is one of the finest we have in the year 2026, but are we in 2026 or somewhere pre-1996?!
+
+- No need to get fixated on CMAES or ARRDE/R6. They won't stand the test of time. 
+
+- Ignore RL, AI, HPC, Bayes, very large budgets, massive automated tests. Think more about what to do when being stuck.
+
+- Ignore all the CEC competitions, it's another kaggle thing. CEC-2017 revealed the problem, very little got solved in a decade. The happy population is cruising through new problem sets every year and is more into bureaucracy with red-carpetting activity. 
+
+- CMAES is dead since about 2014 despite endless continuing "improvements". ARRDE is not doing well already in D=20 or 40, and does not look particularly appealing already on sums and min operators mixing quadrics with harmonics.
 
 TBC...
  
