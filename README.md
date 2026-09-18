@@ -1,14 +1,14 @@
-> Three wise men from freezing North
-> Keep telling me and holding forth
-> The metal will not bring a yield
-> The game's not worth the candle, 
-> nor the labor's field
->
-> But I am planting my aluminium cucumbers, ah-ah
-> Right on a tarpaulin field
-> Yes I am planting my aluminium cucumbers, ah-ah
-> Right on a tarpaulin field
->
+> Three wise men from freezing North<br>
+> Keep telling me and holding forth<br>
+> The metal will not bring a yield<br>
+> The game's not worth the candle,<br> 
+> nor the labor's field<br>
+><br>
+> But I am planting my aluminium cucumbers, ah-ah<br>
+> Right on a tarpaulin field<br>
+> Yes I am planting my aluminium cucumbers, ah-ah<br>
+> Right on a tarpaulin field<br>
+><br>
 > [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
 
 <br>
