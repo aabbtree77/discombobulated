@@ -572,17 +572,19 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
-### Conclusion so far
+### Summary
 
 - The ARRDE is the first algorithm to solve a CEC-2017 composite. No matrices, think about it.
 
-- Two composites are already solvable, F24 and F28. F28 turns out to be 100x less demanding, who would have thought.
+- Two composites are already solvable, F24 and F28. F28 turns out to be 100x less demanding.
 
-- None of these algorithms are good. They have very few ideas and squeeze out maximal performance out of extremely tedious parameter tuning. This is the case of a severe premature over-optimization. 
+- F25 is solvable in D=10 with tiny budgets (<10M evals). In D=20 it does not seem to be solvable at all.
 
-- We need the opposite: more mechanisms with fewer parameters.
+- None of these modern algorithms are good. They are fragile, unpredictable, they get stuck. They bring very few ideas and squeeze out maximal performance out of extremely tedious parameter tuning. This is the case of severe premature over-optimization. 
 
-- No need to get fixated on the CMAES or the ARRDE. None of them will stand the test of time, but they show that we can still make progress.
+- I want the opposite: more focus on mechanisms, less on tuning. The basic ES is more impressive in this sense. It solves Lunacek's bi-Rastrigin and beats the ARRDE there, and the latter is one of the finest we have in the year 2026.
+
+- No need to get fixated on CMAES, ARRDE, or R6 briefly show-cased here. None of them will stand the test of time.
 
 TBC...
  
