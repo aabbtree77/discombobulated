@@ -267,13 +267,13 @@ CEC-2017 is a bigger challenge as there are a lot of functions which are both: m
 I propose the following benchmark to compress the whole BBOB-2009 and CEC-2017:
 
 ```markdown
-| Algorithm    | F10 BBOB-2009 | F24 BBOB-2009 | F24 CEC-2017   | F25 CEC-2017   |
+| Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
 | ------------ | ------------- | ------------- | -------------- | -------------- |
 | ES           | >1B           | <10M          | >200M (f=2800) | >1B (f=2900)   |
 | BIPOP-aCMAES | <50K          | <10M          | =200M (f=2500) | =200M (f=2899) |
-| ARRDE        | <500K         | =200M         | =200M (f=2400) | =1B (f=2700)   |
+| ARRDE        | <500K         | >200M         | =200M (f=2400) | =1B (f=2700)   |
 |              |               |               |                | =2B (f=2800)   |
-| R6           |               |               |                | =10M (f=2600)  |
+| R6           |               |               |                | =50M (f=2600)  |
 ```
 
 One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
@@ -284,7 +284,7 @@ One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will
 
 - ARRDE: pushes the frontier, but it is some hairy C++ list processing and becomes interesting only with budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017 at all. Notably, ARRDE sustains ill-conditioning without matrices, and does it better than CMAES, but not much better.
 
-- R6: my own development (modified ARRDE). Clearly better than anything out there on F25 CEC-2017, but still does not nail it. Solves F28 CEC-2017 in just 10M evals, and F24 with at least 200M evals.
+- R6: my own development (adds a few missing mechanisms to ARRDE). Clearly better than anything out there on F25 CEC-2017, but still does not nail it, which shows that DEs have a serious problem: increasing D>10. Almost everything is solvable in D=10, but not in D=20.
 
 Scroll down for more benchmarking on CEC-2017.
 
@@ -306,7 +306,7 @@ The last report includes Table 2 which shows how differential evolution has been
 
 Expect a sea of mediocre improvements in a few years, but the big issue is that DEs do not scale with increasing D>10. D=20 already reveals plenty of disappointments (e.g. F25 CEC-2017). This is serious. 
 
-Add to that obfuscated nature of these codes when they start to grow. They resemble those tree splitters like MDS or CART which look like pure no-nonsense engineering, but eventually become abandoned.
+Add to that obfuscated nature of these codes when they start to grow. Endless list processing and parameter overtuning.
 
 ### CMAES Mods?
 
@@ -470,30 +470,6 @@ On F24 CEC-2017, it is picky with seeding or whether zero is included in the ini
 It is an already very heavily optimized algorithm which adds to the jSO algorithm global phases 
 with some intricate refinement machinery via merged local intervals acting as [Tabu Search](https://github.com/zarankumar/tabu-search). This does not work when going beyond D>10. Nothing box/tree-alike ever does in high dimensions, tried through and trhough.
 
-### Results with Selected CEC-2017 Composites
-
-D=20, seed=20260829, 200M evals.
-
-| Place | Algorithm      | F24   | F25   | F28   |
-|-------|----------------|-------|-------|-------|
-| 1     | R6             | 2438  | 2600  | 2804  |
-| 2     | ARRDE          | 2400  | 2899  | 3000  |
-| 3     | BIPOP-aCMAES   | 2800  | 2910  | 3100  |
-
-- R6: solves F24, F28, makes significant progress on F25 (in just 10M..50M evals).
-
-- ARRDE: solves F24. Can be pushed to 2700 on F25 with 500M..2B evals.
-
-- BIPOP-aCMAES lags already on F21 and F22 (stalls at ~2300 in the both cases).
-
-Not much progress even with F21-F23 (F22 looks solvable beyond 200M evals), also F26, F27, F29, F30, but I did not spend enough time on these frankly. Every cost function is a separate world. 
-
-One can do runs with 5B evals testing for months without going further than BIPOP-aCMAES which is a very smart algorithm. All of the composites are tough cases. 
-
-Notice that the ARRDE is a recent algorithm (2026) and it is probably the only one that has finally managed to improve pycma BIPOP-aCMAES for real, and the CMAES itself is decades of research. R6 improves ARRDE, but it is a dead end. Added one missing mechanism or two, but this is very much about exponentially diminishing returns. The core is no good.
-
-When looking at the content of these composites (see the lists below), the usual suspect could be modified Schwefel's function. However, F22 CEC-2017 is likely solvable, so the problem is not with Schwefel.
-
 ## CEC-2017 Composites
 
 CEC-2017 was an incredible step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and unexpectedly stumbled upon the simplest problems not amenable to any modern technology. Essentially, this rules out any existing ES and DE, and given how weak PSOs are compared to advanced ESes and DEs, this pretty much rules out anything we know today. 
@@ -598,28 +574,42 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
+### Results with Selected CEC-2017 Composites
+
+D=20, seed=20260829, 200M evals.
+
+| Place | Algorithm      | F22   | F24   | F25   | F28   |
+|-------|----------------|-------|-------|-------|-----|
+| 1     | R6             | 2251  | 2438 | 2600  | 2804  |
+| 2     | ARRDE          | 2243  | 2400  | 2899  | 3000  |
+| 3     | BIPOP-aCMAES   | 2300  | 2800  | 2910  | 3100  |
+
+- R6: solves F22, F24, F28, makes significant progress on F25 (in just 10M..50M evals).
+
+- ARRDE: solves F22 and F24. Can be pushed to 2700 on F25 with 500M..2B evals.
+
+- BIPOP-aCMAES lags already on F22 (also stalls on F21 at ~2300).
+
+Not much progress with F21-F23 (F22 is almost done), F26, F27, F29, F30, but I did not spend enough time on these frankly. Every cost function is a separate world. 
+
 ### Personal Notes
 
 - ARRDE is the first algorithm to solve a CEC-2017 composite. No matrices, think about it.
 
-- Two composites are already solvable, F24 and F28. F28 turns out to be 100x less demanding.
+- Three composites are already solvable: F22, F24, and F28. F28 turns out to be 100x less demanding.
 
-- F25 is solvable in D=10 with tiny budgets (<10M evals). In D=20 it does not seem to be solvable at all. This casts a serious shadow on modern differential evolutions. So the list processing leads to a dead end for D>10. Just like trees and anything revolving around space-partitioning turned out to be a complete cul-de-sac.
+- F25 is solvable in D=10 with tiny budgets (<10M evals). In D=20 it does not seem to be solvable at all. This casts a serious shadow on modern differential evolutions. So the list processing leads to a dead end for D>10.
 
 - CMAES is better at larger D<100, but it hits the wall already with the first layer of multiple ill-conditioned matrices under nonlinearities. Imagine layers and layers of these. Game over.
 
-- None of these modern algorithms are good. Very few ideas, too much parameter tuning, obsession with evals instead of problem solving, declaring winners in competitions when there are no winners at all. Ranking hospitals based on average patient temperatures. 
+- No need to get fixated on CMAES or ARRDE/R6. They won't stand the test of time. Something essential is still missing.
 
-- The basic ES is more impressive in this sense. It solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) and beats the ARRDE there. The latter is one of the finest we have in the year 2026, but are we in 2026 or somewhere in the 1970s?!
+- The basic ES is more impressive to me (no overengineering, no endless parameter tuning). It solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) and beats the ARRDE (in performance) and BIPOP-aCMAES (in simplicity).
 
-- No need to get fixated on CMAES or ARRDE/R6. They won't stand the test of time. 
+- Ignore RL, AI, HPC, Bayes, very small and very large budgets, massive automated tests, competitions, CMAES, ARRDE, R6, ill-conditioning. This is what everyone is doing.
 
-- Ignore RL, AI, HPC, Bayes, very large budgets, massive automated tests. Think more about what to do when being stuck.
+- CEC-2017 revealed the problem, very little got solved in a decade. On the other hand, these composites are like string theory, there is no end to this, and what has no end has no meaning. (mu, lambda)-ES solves multimodality, it is good enough, it keeps sanity.
 
-- Ignore all the CEC competitions, it's another kaggle thing. CEC-2017 revealed the problem, very little got solved in a decade. The happy population is cruising through new problem sets every year and is more into red-carpetting. 
-
-- CMAES is dead since about 2014 despite endless continuing "improvements". ARRDE is not doing well already in D=20 or 40, and does not look particularly appealing already on sums and min operators mixing quadrics with harmonics.
-
-TBC...
+- CMAES is dead since about 2014 despite endless continuing micro-improvements. ARRDE and R6 are not doing well already in D=20 or 40, and they do not look particularly appealing already on sums and min operators mixing quadrics with harmonics.
  
 
