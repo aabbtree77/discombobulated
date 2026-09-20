@@ -610,6 +610,8 @@ Not much progress with F21-F23 (F22 is almost done), F26, F27, F29, F30, but I d
 
 - CEC-2017 revealed the problem, very little got solved in a decade. On the other hand, these composites are like string theory, there is no end to this, and what has no end has no meaning. (mu, lambda)-ES solves multimodality, it is good enough, it keeps sanity.
 
-- CMAES is dead since about 2014 despite endless continuing micro-improvements. ARRDE and R6 are not doing well already in D=20 or 40, and they do not look particularly appealing already on sums and min operators mixing quadrics with harmonics.
+- [CMAES](https://cma-es.github.io/) is dead since about 2014 despite endless continuing micro-improvements. ARRDE and R6 are not doing well already in D=20 or 40. They do not look particularly appealing already on sums and min operators mixing quadrics with harmonics.
+
+- DFO is a solved problem up to D=10, but ill-conditioning becomes a luxury to have already in D=20. Do not mix variables of different nature or scale beyond D>10 unless you are content with local optima. 
  
 
