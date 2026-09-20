@@ -486,7 +486,7 @@ ARRDE does not work that well when going beyond D>10. Nothing box/tree-alike eve
 
 CEC-2017 was an incredible step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and unexpectedly stumbled upon the simplest problems not amenable to any modern technology. Essentially, this rules out any existing ES and DE, and pretty much anything we know today.
 
-The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on them without being prepared to spend months without leading anywhere. All of the latest DEs fail on them, with an exception of the ARRDE on F22 and F24. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
+The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on them without being prepared to spend months without any results. All of the latest DEs fail on them, with an exception of the ARRDE on F22 and F24. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
 
 What are these challenges?
 
@@ -496,9 +496,9 @@ In turn, these hybrids are rotated and scaled with different matrices and furthe
 
 Any single function is often already deceptive: multimodal, sometimes non-differentiable. It can already be ill-conditioned before being mixed into a hybrid. The latter in turn will get their own ill-conditioning. The key is ill-conditioning with multiple matrices in higher D>10. This is what kills modern ESes and DEs.
 
-There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches. However, this is less severe than multiple mixing and increasing D>10.
+There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches. However, this is less severe than multiple ill-condtioned matrices and increasing D>10.
 
-Initial functions/components extracted from multilayer mixing (which is still 2 layers at most in CEC-2017):
+Initial functions/components extracted from multilayer mixing (which is still only 2 layers, more or less, in CEC-2017):
 
 F30:
 
