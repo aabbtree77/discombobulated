@@ -410,13 +410,13 @@ Bayesian optimization dates back to 1970s...
 
 Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to pure list processing (DEs) too, and I do not think AI or RL is the way here.
 
-We need better mechanisms to get out of an entrapment. Autoresearch is a joke. RL is a premature optimization. AI will talk about "basins" without noticing that the concept is undefined.
+We need better mechanisms to get out of entrapment. Autoresearch is a joke. RL is a premature optimization. AI will spit out code about "basins" without noticing that the concept is undefined.
 
 "What are we going to do with layers of ill-conditioning or increasing D>10 to begin with? Be critical, avoid being sycophantic."
 
 Usually nothing good comes out of these discussions in 2026.
 
-The Tunnelling Method, The Filled Function Method? See Aimo Törn and Antanas Žilinskas (1987) Global Optimization and some recent works, it could be interesting. 
+The Tunnelling Method, The Filled Function Method? See Aimo Törn and Antanas Žilinskas (1987) Global Optimization and some recent works, it could be something.  
 
 ## Evaluation Budgets
 
@@ -444,7 +444,7 @@ on bound-constrained optimization, these inequality constraints are omitted. Des
 many CEC2011 problems remain very challenging due to their high dimensionality and multimodal landscapes. Following the CEC2011 benchmarking protocol, we evaluate all algorithms under three functionevaluation budgets: Nmax = 5 × 10^4
 , 10^5, and 1.5 × 10^5."_
 
-Kindergarten budgets, but they still advanced DFO to ARRDE, paradoxically.
+Kindergarten budgets, but they still advance DFO, paradoxically.
 
 ### Testing ARRDE
 
@@ -477,10 +477,9 @@ the whole thing with 10M evals or 20M evals, and this is not so predictable due 
 
 On F24 CEC-2017, ARRDE is picky with seeding or whether zero is included in the initial population.
 
-It is an already very heavily optimized algorithm which adds to the jSO algorithm global phases (hate it)
-with some intricate refinement machinery via merged local intervals acting as [Tabu Search](https://github.com/zarankumar/tabu-search). 
+It is an already very heavily optimized algorithm which adds (to the jSO algorithm) global phases with some intricate refinement machinery via merged local intervals acting as some sort of [Tabu Search](https://github.com/zarankumar/tabu-search). 
 
-ARRDE does not work that well when going beyond D>10. Nothing box/tree-alike ever does in high dimensions, tried through and through. MDS, CART...
+This does not work that well beyond D>10.
 
 ## CEC-2017 Composites
 
@@ -611,16 +610,15 @@ Every cost function is a separate world.
 
 - Three composites are already solvable in D=20: F22, F24, and F28. F28 turns out to be 100x less demanding than F22/F24.
 
-- F25 is solvable in D=10 with tiny budgets (ARRDE, <10M evals). In D=20 it does not seem to be solvable at all. This casts a serious shadow on modern differential evolutions in D>10.
+- F25 is solvable in D=10 (R6, <100M evals).
 
-- (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html), i.e. sums and min operator mixing quadrics with harmonics. It beats ARRDE (in performance) and BIPOP-aCMAES (in simplicity) here.
+- (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html). This is important as the cost entails sums and min operator mixing quadrics with harmonics. This class of costs is a frequent work horse in Phys Rev B. The ES beats ARRDE (in performance) and BIPOP-aCMAES (in simplicity) here.
 
-- No need to get fixated on CMAES or ARRDE/R6. They are complex and maxed out/overtuned. 
+- No need to get fixated on CMAES or ARRDE/R6. They are complex and maxed out/overtuned, but can be spectacular up to D=10.
 
-- CMAES also hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. Game over.
+- CMAES hits the wall with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. Game over.
 
-- ARRDE/R6 also suffer in D>10 and they do not look particularly appealing already on well-conditioned [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html).
+- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html).
 
-- CEC-2017 revealed the problems, very little got solved in a decade. There are endless ways to complicate these composites further that no algorithm will ever catch up.
+- CEC-2017 revealed the problems, very little got solved in a decade. There are endless ways to complicate these composites further that no algorithm will ever catch up in D>10.
 
-- So keep your variables well-conditioned in D>10 and run (mu, lambda)-ES as indicated above.
