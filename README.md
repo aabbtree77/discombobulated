@@ -263,7 +263,7 @@ CEC-2017 is a bigger challenge with functions which are both: multimodal and ill
 
 Solvable = getting close to the global optimum within, say, 1% relative error in 1B evals in at least D=20. Everything is easy in D=10.
 
-A rough preliminary picture is this:
+A preliminary view is this:
 
 ```markdown
 | Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
@@ -346,6 +346,8 @@ Two serious drawbacks killing the whole DE program sadly:
 
   None of this is critical and simplifies pycma dramatically. On the other hand, we simply lose years of testing and tuning present in pycma. This is why I would not recommend any custom implementation of CMAESes for pure black-box uses, which includes the CMAESes by [Minion](https://github.com/khoirulmuzakka/Minion/issues/7).
 
+  The biggest problem with the whole CMAES family of algorithms is that it just does not solve that well the main problem it addresses - ill-conditioning. In D up to 10, ARRDE is vastly superior on tougher challenges with very large budgets. In larger dimensions everything sucks as the CEC-2017 composites show.
+
 ### Dual Annealing?
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
@@ -356,7 +358,7 @@ Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en
 
 Minion's result in D=10 depends on the starting point and D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, seed = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
-### Some BBOB-2009 Tests
+### Some Old BBOB-2009 Tests
 
 Nowadays it is much faster to git clone and test an algorithm than [to decipher a pdf report](https://github.com/CMA-ES/pycma/discussions/370). Send any code to AI to add comments and explain the algorithm. Asking AI to improve the state of the art does not work yet.
 
@@ -475,15 +477,17 @@ the whole thing with 10M evals or 20M evals, and this is not so predictable due 
 
 On F24 CEC-2017, ARRDE is picky with seeding or whether zero is included in the initial population.
 
-It is an already very heavily optimized algorithm which adds (to the jSO algorithm) global phases with some intricate refinement machinery via merged local intervals acting as an implementation of [Tabu Search](https://github.com/zarankumar/tabu-search).
+ARRDE adds (to the jSO algorithm) global phases with some intricate refinement machinery via merged local intervals acting as an implementation of [Tabu Search](https://github.com/zarankumar/tabu-search).
 
-Decent up to D=10, afterwards every problem becomes a special case. Might work spectacularly (F24 CEC-2017 D=20), but may also lead nowhere (F25 CEC-2017 D=20).
+Decent up to D=10, afterwards every problem becomes a special case. Might work spectacularly (F24 CEC-2017 D=20), but may also lead to nowhere (F25 CEC-2017 D=20). Generally very bad with increasing D>10 as the experiments with F24 BBOB-2009 for D=10, 20,40, 100 would show.
+
+ARRDE also becomes extremely slow to run beyond 200M-500M evals, this is fixable, but not in the current edition. R6 runs about 5x times faster when evals reach billions.
 
 ## CEC-2017 Composites
 
 CEC-2017 was an incredible step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology. They rule out any existing ES and DE.
 
-The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on them without being prepared to spend months without any results. All of the latest DEs fail on them, with an exception of the ARRDE on F22 and F24. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
+The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on them without being prepared to spend months without any results. All of the latest DEs fail on them, with an exception of the ARRDE on F22 and F24, and one still has to tinker a bit. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
 
 What are these challenges?
 
@@ -606,18 +610,16 @@ Not much progress on F21, F23, F26, F27, F29, F30.
 
 - Three composites are already solvable in D=20: F22, F24, and F28. F28 turns out to be 100x less demanding than F22/F24.
 
-- F25 is solvable in D=10 (R6, <50M evals).
+- F25 is solvable in D=10 (R6, <50M evals, but vanilla ARRDE might get there too).
 
 - BIPOP-aCMAES hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. Game over. It is so bad on F25 already in D=10 (f=2898).
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40.
 
-- CMAES is a very niche algorithm, more on the Bayesian Optimization side.
+- The whole CMAES family is now a very niche thing (2026). I would use CMAES directly for Bayesian Optimization without all the surrogate trash. The algorithm has a lot of parameter doubling so it is very frugal with evals. BIPOP-aCMAES is only for ill-conditioning by a single matrix and 10 < D < 100, but we do not really know problem classes that fit this criterion, and in D=20 I might still use ARRDE.
 
-- (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40.
+- (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40, maybe even D=100. This is the only algorithm which is simple to understand and achieves a lot without overengineering. It will disappoint in the presence of ill-conditioning.
 
-- Ill-conditioning is best-tackled with ARRDE/R6 when D<=10. Beyond D>10 every problem becomes a special case needing some tinkering, it can also be hopeless.
+- Strive not to mix variables of different nature and scale, this complicates the algorithms enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- BIPOP-aCMAES is only for ill-conditioning by a single matrix and 10 < D < 100.
-
-
+- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of DFO, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10.
