@@ -626,8 +626,12 @@ Not much progress on F21, F23, F26, F27, F29, F30.
 
 - Focus more on what is actually being optimized. These algorithms are blind, generic, maxed out, but what do you expect from a black box optimization?
 
-- Notice that universalism/complexity does not work that well IRL: Rust/C++ is not a better C, Lisp/Haskell did not win anything, nobody cares about higher spin QFT and string theories, zero contribution by RL to optimization, after a decade the chess world still uses SF and not LC0, and nothing works well for both, city and off-road riding.
+- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics, and it looks like this nonlinear high-dimensional multimodal problem comes with an elegant solution. Numerical, yes, but not overengineered. One major caveat here is that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
 
-- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics, and it looks like this tough nonlinear high-dimensional multimodal problem comes with an elegant solution. Numerical, yes, but not overengineered. However, notice that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
+- Notice that universalism does not work that well IRL: C++/Rust/Nim are neither better C nor faster Python. Lisp/Haskell did not win anything, nobody cares about higher spin QFT and string theories, zero contribution by RL to optimization, after a decade the chess world still uses SF and not LC0, and nothing works well for both city and off-road riding.
+
+- What about Leonardo da Vinci? A great painter... of portraits. 16 years to paint Mona Lisa, but notice Claude Monet painted his Woman with a Parasol in a few hours and the result is impressive. When it comes to the flow of time, Souvenir de Mortefontaine by Jean-Baptiste-Camille Corot is really something. 
+
+
 
 
