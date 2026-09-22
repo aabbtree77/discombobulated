@@ -253,9 +253,9 @@ That number can be proprotional to the condition number squared... The ES reache
 
 After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to BIPOP-aCMAES or ARRDE.
 
-## The Rules of the Game
+## Rules of the Game
 
-So this is all about multimodality, ill-conditioning, eval budget and dimensions.
+So this is all about multimodality, ill-conditioning, dimensions, and evalutation budgets. Not about what is actually being optimized ;).
 
 The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
 
@@ -616,10 +616,12 @@ Not much progress on F21, F23, F26, F27, F29, F30.
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40.
 
-- The whole CMAES family is now a very niche thing (2026). I would use CMAES directly for Bayesian Optimization without all the surrogate trash. The algorithm has a lot of parameter doubling so it is very frugal with evals. BIPOP-aCMAES is only for ill-conditioning by a single matrix and 10 < D < 100, but we do not really know problem classes that fit this criterion, and in D=20 I might still use ARRDE.
+- CMAES is a niche algorithm now (2026). I would use it directly for Bayesian Optimization, without surrogates. The algorithm has a lot of reasonable massively-tested parameter doubling so it is very frugal with eval numbers. BIPOP-aCMAES is only for ill-conditioning by a single matrix and 10 < D < 100.
 
 - (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40, maybe even D=100. This is the only algorithm which is simple to understand and achieves a lot without overengineering. It will disappoint in the presence of ill-conditioning.
 
 - Strive not to mix variables of different nature and scale, this complicates the algorithms enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimizer, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10.
+- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimization algorithm, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10. We have seen this countless times by now (MDS, CART...).
+
+- Focus more on what is actually being optimized. These algorithms are blind, generic, maxed out.
