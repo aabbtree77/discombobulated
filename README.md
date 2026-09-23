@@ -608,7 +608,15 @@ A month later:
 
 ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 looks solvable. 
 
-R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail it, I put it on hold. It runs 5x faster than ARRDE, but the R6 fixed size lists and caching seem to be detrimental to the success rate when restarting on F24 CEC-2017, so I am not sure about R6 anymore.
+R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail it, I put it on hold. It runs 5x faster than ARRDE (in real time), but fixed size lists and other optimizations are detrimental to the success rate when restarting on F24 CEC-2017 in D=20. R6 has a few extra mechanisms to deal with entrapment, but this works mostly on F25. Too many special cases to care really.
+
+There are two major conclusions from this whole research:
+
+- ARRDE can be modified to run 5x faster in real time than it does now.
+
+- There are special modes which are more effective than default.
+
+- There are a few extra mechanisms which improve ARRDE on F25 in D=20, but they also add parameters and reduce performance somewhere else, so I am not pushing this at the moment.
 
 ### Personal Notes
 
@@ -636,6 +644,6 @@ R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail 
 
 - Focus more on what is actually being optimized. DFO algorithms are blind, generic, maxed out. They are trying to be everything: tiny and big eval budgets, well-posed vs. stiff systems. They are generally a disaster beyond D>10.
 
-- Universalism does not seem to work that well IRL: C++/Rust/Nim are neither better C nor faster Python. Nothing will ever work well for city, highway, and off-road riding.
+- Universalism does not seem to work that well IRL: C++/Rust/Nim are neither better C nor faster Python. No single motorcycle will ever work well for city, highway, and off-road riding.
 
 - One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics. One major caveat here is that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
