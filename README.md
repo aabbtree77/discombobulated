@@ -604,28 +604,38 @@ D=20, seed=20260829, 200M evals.
 
 Not much progress on F21, F23, F26, F27, F29, F30.
 
+A month later: 
+
+ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 looks solvable. 
+
+R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail it, I put it on hold. It runs 5x faster than ARRDE, but the R6 fixed size lists and caching seem to be detrimental to the success rate when restarting on F24 CEC-2017, so I am not sure about R6 anymore.
+
 ### Personal Notes
 
 - ARRDE is the first algorithm to solve a CEC-2017 composite in D=20. No matrices, think about it.
 
 - Three composites are already solvable in D=20: F22, F24, and F28. F28 turns out to be 100x less demanding than F22/F24.
 
-- F25 is solvable in D=10 (R6, <50M evals, but vanilla ARRDE might get there too).
+- F25 is solvable in D=10 (R6, <50M evals, vanilla ARRDE will get there too).
 
-- BIPOP-aCMAES hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. Game over. It is so bad on F25 already in D=10 (f=2898).
+- For larger budgets and tougher problems it might make sense to shrink default ARRDE popsize to 50 and wrap it inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. 
+
+- BIPOP-aCMAES hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. It is so bad on F25 already in D=10 (f=2898).
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40.
 
-- CMAES is a niche algorithm now (2026). I would use it directly for Bayesian Optimization, without surrogates. The algorithm has a lot of reasonable massively-tested parameter doubling so it is very frugal with eval numbers. BIPOP-aCMAES is only for ill-conditioning by a single matrix and 10 < D < 100.
+- CMAES is a niche algorithm now (2026). I would use it only for super tiny budgets (in Bayesian Optimization, directly, without surrogates and mods). The algorithm has a lot of reasonable massively-tested parameter doubling/halving so it is very frugal with eval numbers. Include scipy BFGS or SLSQP here too. 
 
-- (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40, maybe even D=100. This is the only algorithm which is simple to understand and achieves a lot without overengineering. It will disappoint in the presence of ill-conditioning.
+- BIPOP-aCMAES improves CMAES vastly, but at the expense of doing the grid search over popsize and sigma0. This is still very frugal due to doubling, but the search is in 2D, not 1D, and this is already competing with ARRDE. I would choose BIPOP over ARRDE for, say, <10M evals only, but it is not clear where this budget is critical. It is better to choose ARRDE with >100M evals as this is superior in the presence of ill-conditioning/stiffness, so the role of BIPOP is rather moot. Still valuable on smaller budgets and beyond D>10, but do not expect miracles on the composites.
 
-- Strive not to mix variables of different nature and scale, this complicates the algorithms enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
+- (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40, maybe even D=100. This is the only algorithm which is simple and achieves a lot without overengineering. It will disappoint in the presence of ill-conditioning.
 
-- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimization algorithm, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10. We have seen this countless times by now (MCS, CART...).
+- Strive not to mix variables of different nature and scale, this complicates these algorithms enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- Focus more on what is actually being optimized. These algorithms are blind, generic, maxed out. They are trying to be everything (continuous, discrete, tiny and big eval budgets), but what to expect from a black box optimization? 
+- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimization algorithm, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10. We have seen this countless times by now.
 
-- Uiversalism does not seem to work that well IRL: C++/Rust/Nim are neither better C nor faster Python. Nobody cares about higher spin QFT/string theories. Zero contribution by RL to optimization so far. After a decade the chess world still uses SF, not LC0. Nothing works well for both city and off-road riding.
+- Focus more on what is actually being optimized. DFO algorithms are blind, generic, maxed out. They are trying to be everything: tiny and big eval budgets, well-posed vs. stiff systems. They are generally a disaster beyond D>10.
 
-- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics, and it looks like this nonlinear high-dimensional multimodal problem comes with an elegant solution. Numerical, yes, but not overengineered. One major caveat here is that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
+- Universalism does not seem to work that well IRL: C++/Rust/Nim are neither better C nor faster Python. Nothing will ever work well for city, highway, and off-road riding.
+
+- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics. One major caveat here is that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
