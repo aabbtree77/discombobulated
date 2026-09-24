@@ -604,9 +604,9 @@ D=20, seed=20260829, 200M evals.
 
 Not much progress on F21, F23, F26, F27, F29, F30.
 
-A month later: 
+A month later:
 
-ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 looks solvable. 
+ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 looks solvable.
 
 R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail it, I put it on hold. It runs 5x faster than ARRDE (in real time), but fixed size lists and other optimizations are detrimental to the success rate when restarting on F24 CEC-2017 in D=20. R6 has a few extra mechanisms to deal with entrapment, but this works mostly on F25. Too many special cases to care really.
 
@@ -626,13 +626,13 @@ There are two major conclusions from this whole research:
 
 - F25 is solvable in D=10 (R6, <50M evals, vanilla ARRDE will get there too).
 
-- For larger budgets and tougher problems it might make sense to shrink default ARRDE popsize to 50 and wrap it inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. 
+- For larger budgets and tougher problems it might make sense to shrink default ARRDE popsize to 50 and wrap it inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals.
 
 - BIPOP-aCMAES hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. It is so bad on F25 already in D=10 (f=2898).
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40.
 
-- CMAES is a niche algorithm now (2026). I would use it only for super tiny budgets (in Bayesian Optimization, directly, without surrogates and mods). The algorithm has a lot of reasonable massively-tested parameter doubling/halving so it is very frugal with eval numbers. Include scipy BFGS or SLSQP here too. 
+- CMAES is a niche algorithm now (2026). I would use it only for super tiny budgets (in Bayesian Optimization, directly, without surrogates and mods). The algorithm has a lot of reasonable massively-tested parameter doubling/halving so it is very frugal with eval numbers. Include scipy BFGS or SLSQP here too.
 
 - BIPOP-aCMAES improves CMAES vastly, but at the expense of doing the grid search over popsize and sigma0. This is still very frugal due to doubling, but the search is in 2D, not 1D, and this is already competing with ARRDE. I would choose BIPOP over ARRDE for, say, <10M evals only, but it is not clear where this budget is critical. It is better to choose ARRDE with >100M evals as this is superior in the presence of ill-conditioning/stiffness, so the role of BIPOP is rather moot. Still valuable on smaller budgets and beyond D>10, but do not expect miracles on the composites.
 
@@ -642,11 +642,11 @@ There are two major conclusions from this whole research:
 
 - I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimization algorithm, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10. This is also very tricky.
 
-- I have tried to take backtracking more seriously. Instead of splitting coordinates and all that nonsense, assume each generation is a tree node, detect stalling, and backtrack. Each node has its population spread (tiny spreads to be avoided), and also distance from the last stalling point. It takes some tinkering to build the tree of reasonable size and properly walkable, but the main difficulty here is that exploring the tree still does not guarantee getting into a new/better region. This also adds extra parameters, e.g.  whether to double distances during backtracking failures, should one restart at the node with the exact preserved population and just different RNG state to "branch", or should one change the population as well? Everything becomes too complex to be true.
+- I have tried to take backtracking more seriously. Instead of splitting coordinates and all that nonsense, assume each generation is a tree node, detect stalling, and backtrack. Each node has its population spread (tiny spreads to be avoided), and also distance from the last stalling point. It takes some tinkering to build the tree of reasonable size and properly walkable, but the main difficulty here is that exploring the tree still does not guarantee getting into a new/better region. This also adds extra parameters, e.g. whether to double distances during backtracking failures, should one restart at the node with the exact preserved population and just different RNG state to "branch", or should one change the population as well? Everything becomes too complex to be true.
 
-- Another direction is tunneling/filling functions. The simplest way (heuristic) is to alternate with fixed budgets f-T-f-T minimizations where f is the cost and T is the tunneling function based on the minimal nearest neighbor distance to the archive of poles (local minima). There is one extra parameter to match in the exponent (how strongly to repel local minima), everything is beautiful and simple, one can use scipy BFGS or say ARRDE. Unfortunately, this does not solve F25 CEC-2017 in D=10 dimensions already, so I had to abandon this endeavor, despite that it looked like a much simpler and the only reasonable way to implement escapes and "backtracking" in R^D. 
+- Another direction is tunneling/filling functions. The simplest way (heuristic) is to alternate with fixed budgets f-T-f-T minimizations where f is the cost and T is the tunneling function based on the minimal nearest neighbor distance to the archive of poles (local minima). There is one extra parameter to match in the exponent (how strongly to repel local minima), everything is beautiful and simple, one can use scipy BFGS or say ARRDE. Unfortunately, this does not solve F25 CEC-2017 in D=10 dimensions already, so I had to abandon this endeavor, despite that it looked like a much simpler and the only reasonable way to implement escapes and "backtracking" in R^D.
 
-- I have spent about one day on the tunneling heuristic. There might be some parameter ranges and budgets where this works and makes progress, but it is impossible to test everything properly. A fundamental problem here is that T is equally hard if not harder to optimize. What to do when we simply cannot find a better region. Also, as the archive of poles grows, evaluating T slows down numerically, which is a problem in Python. One can make it very fast (hello FMM and electrostatics), but this is viable when prototyping shows promise. It does not. 
+- I have spent about one day on the tunneling heuristic. There might be some parameter ranges and budgets where this works and makes progress, but it is impossible to test everything properly. A fundamental problem here is that T is equally hard if not harder to optimize. What to do when we simply cannot find a better region. Also, as the archive of poles grows, evaluating T slows down numerically, which is a problem in Python. One can make it very fast (hello FMM and electrostatics), but this is viable when prototyping shows promise. It does not.
 
 - Ultimately, the most reasonable thing to do, but not reaching the state of the art, not in my tests. Also, in D=20, one needs millions of evals for f and T, and the whole optimization budget doubles and further gets multiplied by the number of alternation stages. This becomes cumbersome. scipy BFGS/SLSQP can be much faster, but not a good match as T is multimodal. They work, but not well enough. Also tried a single F-T with larger budgets (to really escape a strong final ARRDE suboptimum), to no avail.
 
