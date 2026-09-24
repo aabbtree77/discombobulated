@@ -648,9 +648,9 @@ There are two major conclusions from this whole research:
 
 - I have spent about one day on the tunneling heuristic. There might be some parameter ranges and budgets where this works and makes progress, but it is impossible to test everything properly. A fundamental problem here is that T is equally hard if not harder to optimize. What to do when we simply cannot find a better region. Also, as the archive of poles grows, evaluating T slows down numerically, which is a problem in Python. One can make it very fast (hello FMM and electrostatics), but this is viable when prototyping shows promise. It does not.
 
-- Ultimately, the most reasonable thing to do, but not reaching the state of the art, not in my tests. Also, in D=20, one needs millions of evals for f and T, and the whole optimization budget doubles and further gets multiplied by the number of alternation stages. This becomes cumbersome. scipy BFGS/SLSQP can be much faster, but not a good match as T is multimodal. They work, but not well enough. Also tried a single F-T with larger budgets (to really escape a strong final ARRDE suboptimum), to no avail.
+- Ultimately, the most reasonable thing to do, but not reaching the state of the art, not in my tests. Also, in D=20, one needs millions of evals for f and T, and the whole optimization budget doubles and further gets multiplied by the number of alternation stages. This becomes cumbersome. scipy BFGS/SLSQP can be much faster, but not a good match as T is multimodal. They work, but not well enough. Also tried a single F-T with larger budgets (to escape the final ARRDE suboptimum), to no avail.
 
-- Tunneling/filling work, and they look reasonable and understandable, but they do not improve the state of the art (ARRDE). Still, I get an uneasy feeling that this could be a viable thesis theme. What to do when getting stuck? Tunnel through...
+- Tunneling/filling work, and they look reasonable and understandable, but they do not improve the state of the art (ARRDE). Still, I get an uneasy feeling that this could be a viable thesis theme.
 
 - Regarding DEs, they are all pale compared to ARRDE. jSO improves tiny bit LSHADE, nothing as dramatic as advertised (came 2nd in the whole CEC-2017). j2020 was significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough and everything is pathetic in D=20.
 
