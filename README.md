@@ -517,7 +517,9 @@ I put R6 on hold for now. It runs 5x faster in real time, but it does not solve 
 
 - Better focus more on what is actually being optimized.
 
-- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is vital in physics, but normally not a black box, which rules out DFO.
+- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is vital in physics, but normally not a black box, which rules out DFO.
+
+- F25 CEC-2017 in D=20 is a tough nut to crack. This problem defies mechanisms to escape local minima. It seems to be impossible to identify and exclude the region that drops anything to f=2600 instead of fopt=2500, at least not with lists, boxes, and ellipsoids.
 
 ## Selected References
 
