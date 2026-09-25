@@ -1,11 +1,14 @@
 > Three wise men from freezing North<br>
 > Keep telling me and holding forth<br>
 > The metal will not bring a yield<br>
-> The game's not worth the candle, nor the labor's field<br> ><br>
+> The game's not worth the candle, nor the labor's field<br> 
+><br>
 > But I am planting my aluminium cucumbers, ah-ah<br>
 > Right on a tarpaulin field<br>
 > Yes I am planting my aluminium cucumbers, ah-ah<br>
-> Right on a tarpaulin field<br> ><br> > [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
+> Right on a tarpaulin field<br> 
+><br> 
+> [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
 
 <br>
 
@@ -19,7 +22,7 @@
 
 Do we need complex modern optimization algorithms?
 
-The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
+The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning, stiffness), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -239,23 +242,23 @@ Error                 : 2.856416035435e+02
 Progress saved to     : progress_cec2022_f12.csv
 ```
 
-Most of the state of the art is within 10% from the optimum. I have not seen any algorithm to go below 2900.
+I have not seen any algorithm to go below 2900.
 
 ## The Ugly: F10 BBOB-2009
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-The ES becomes brittle with ill-conditioning. It still solves these problems, but one needs to increase the budget 1000x, say to a billion evals.
+The ES becomes brittle with ill-conditioning.
 
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number..." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
 That number can be proprotional to the condition number squared... The ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
 
-After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to BIPOP-aCMAES or ARRDE.
+After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to ARRDE.
 
 ## Rules of the Game
 
-So this is all about multimodality, ill-conditioning, dimensions, and evalutation budgets. Not about what is actually being optimized ;).
+So this is all about multimodality, ill-conditioning, dimensions, and evalutation budgets.
 
 The figure above indicates that a large part of BBOB-2009, if not entirely the whole benchmark, can be covered by running any solid Newton (scipy SLSQP/BFGS) with the ES and choosing the better result.
 
@@ -263,51 +266,29 @@ CEC-2017 is a bigger challenge with functions which are both: multimodal and ill
 
 Solvable = getting close to the global optimum within, say, 1% relative error in 1B evals in at least D=20. Everything is easy in D=10.
 
-A preliminary view is this:
+A preliminary view:
 
 ```markdown
 | Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
 | ------------ | ------------------ | ------------------ | ----------------- | ----------------- |
 | ES           | >1B                | <10M f=102.61      | >200M f=2800      | >1B f=2900        |
 | BIPOP-aCMAES | <50K               | <10M f=102.61      | =200M f=2500      | =200M f=2899      |
-| ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2700        |
-|              |                    |                    |                   | =2B f=2800        |
-| R6           |                    | =200M f=1.2732     |                   | =50M f=2600       |
+| ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2600        |
 ```
-
-One could add F7 BBOB-2009 to remove pure Newton/gradient methods, but they will be pathetic on F24s and F25 anyway.
 
 - ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. Outstanding only with mild condition numbers (up to ~1000, still solves F18 BBOB-2009). It is sensitive w.r.t. starting points, but this is nothing serious.
 
-- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. It also lacks escape mechanisms. When stuck, BIPOP just restarts with a different lambda and sigma0, but restarting does not work on the composites already in D=10.
+- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. It does not solve F25 CEC-2017 already in D=10.
 
 - ARRDE: pushes the frontier, but it is some hairy C++ list processing and becomes interesting only with budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES.
-
-- R6: my own development (a modified ARRDE). Clearly better than anything out there on F25 CEC-2017, solves it in D=10, but still does not nail it in D=20. This problem and F24 BBOB-2009 show that DEs lose their quality very rapidly w.r.t. increasing D beyond 10.
 
 Scroll down for more benchmarking on CEC-2017.
 
 ## Anything Better Out There?
 
-### Newest DEs?
+- DEs lose their quality very rapidly w.r.t. increasing D beyond 10.
 
-RDEx-SOP is a winner of CEC-2025, but it is tuned for tiny budgets (2e4xD evals). It already has improvements, alternatives.
-
-- Sichen Tao et al. (2026) [RDEx-SOP: Exploitation-Biased Reconstructed Differential Evolution for Fixed-Budget Bound-Constrained Single-Objective Optimization](https://arxiv.org/abs/2603.27089)
-
-- Dikshit Chauhan (2026) [DE-2LS: Differential Evolution with Late-Stage local-search for Unconstrained Single-Objective Numerical Optimization](https://arxiv.org/abs/2606.27762)
-
-- Dikshant et al. (2026) [RDEx-CASK: Cauchy Mutation, Archive, and Stagnation Kick for RDEx-CSOP](https://arxiv.org/abs/2605.09652)
-
-- Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)
-
-The last report includes Table 2 which shows how differential evolution has been improved with about four ideas since 2009 up to 2022.
-
-Two serious drawbacks killing the whole DE program sadly:
-
-- Horrid performance w.r.t. increasing D>10.
-
-- DE codes become hard to follow and optimize when they start to grow. Any algorithm is literally endless primitive list processing and parameter tuning.
+- ES/CMAES are worse at ill-conditioning than DEs.
 
 ### CMAES Mods?
 
@@ -325,28 +306,14 @@ Two serious drawbacks killing the whole DE program sadly:
 
   No difference, except that it is much faster to test than pycma and MSC-CMA-ES and is integrated into [Minion](https://github.com/khoirulmuzakka/Minion), though we did have libcmaes before.
 
-- LLMs are everywhere now. This one was quite early and used local minimal models to "explain" concrete optimization results after the run. It does not look like it was a hit:
-
-  Jill Baumann and Oliver Kramer (2024) [Towards Explainable Evolution Strategies with
-  Large Language Models](https://arxiv.org/abs/2407.08331)
-
-- Hopeless theory, e.g. indicating that the ES population size should be O(sqrt(D)xlog(D)):
-
-  Lisa Schönenberger and Hans-Georg Beyer (2023) [On a Population Sizing Model for Evolution Strategies
-  Optimizing the Highly Multimodal Rastrigin Function](https://pmc.ncbi.nlm.nih.gov/articles/PMC7615652/)
-
-- Simplifications exist, and I like them, but I am not sure what to do with them, e.g.
+- Simplifications exist, but I am not sure what to do with them, e.g.
 
   Zhenhua Li and Qingfu Zhang (2017) [A Simple Yet Efficient Rank One Update for Covariance
   Matrix Adaptation](https://arxiv.org/abs/1710.03996)
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-  The problem is, for any such simplification, everything starts anew, e.g. the rank one algorithm is too sensitive/unreliable w.r.t. starting points and initial step sizes on F10 BBOB-2009, while pycma brings no such trouble. The rank one update also does not work with larger lambdas as its simplistic CSA blows up the step size.
-
-  None of this is critical and simplifies pycma dramatically. On the other hand, we simply lose years of testing and tuning present in pycma. This is why I would not recommend any custom implementation of CMAESes for pure black-box uses, which includes the CMAESes by [Minion](https://github.com/khoirulmuzakka/Minion/issues/7).
-
-  The biggest problem with the whole CMAES family of algorithms is that it just does not solve that well the main problem it addresses - ill-conditioning. In D up to 10, ARRDE is vastly superior on tougher challenges with very large budgets. In larger dimensions everything sucks as the CEC-2017 composites show.
+  In D up to 10, ARRDE is vastly superior on tougher challenges with very large budgets, but it fails on the CEC-2017 composites in D=20 despite a few exceptions.
 
 ### Dual Annealing?
 
@@ -354,97 +321,11 @@ scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as loca
 
 I did not get anything from DAs on CEC2017 F21 - F30 in D=20. Also tried [this code](https://github.com/DawitLam/Improvements_to_Dual_Annealing_in_SciPy) to no avail.
 
-Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). The ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), the ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse.
+Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html) between the ARRDE, numerous BFGS implementations, and two DA implementations. It turns out that Minion's DA is worse than scipy DA, except on F17 and F26 (CEC-2017). ARRDE is clearly better than anything on: F10, F12, F17 (somewhat), F21, F22, F24, F26, F28, and F30. However, in the rest of the cases DAs are close and on F25 scipy DA = 2600 (!), ARRDE and the rest are close and only around 2900. It is the first time I see the problem where the ARRDE could be clearly worse. WTF?!
 
-Minion's result in D=10 depends on the starting point and D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), the ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, seed = 20260815, the ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
+D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, seed = 20260815, ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
-### Some Old BBOB-2009 Tests
 
-Nowadays it is much faster to git clone and test an algorithm than [to decipher a pdf report](https://github.com/CMA-ES/pycma/discussions/370). Send any code to AI to add comments and explain the algorithm. Asking AI to improve the state of the art does not work yet.
-
-- Youssef Diouane et al. (2022) [TREGO: a Trust-Region Framework for Efficient Global Optimization](https://arxiv.org/abs/2101.06808)
-
-- Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
-  objectives on the bbob and bbob-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
-
-- Ryoji Tanabe (2022) [Benchmarking the Hooke-Jeeves Method, MTS-LS1, and BSrr on
-  the Large-scale BBOB Function Set](https://arxiv.org/abs/2204.13284)
-
-- Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
-
-- Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
-
-- Konstantinos Varelas (2019) [Benchmarking Large Scale Variants of CMA-ES and L-BFGS-B
-  on the bbob-largescale Testbed](https://inria.hal.science/hal-02160106/file/wksp213s2-file1.pdf)
-
-- Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
-  BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
-
-## Selected Classics
-
-Bayesian optimization dates back to 1970s...
-
-- H. H. Rosenbrock (1960) An Automatic Method for Finding the Greatest or Least Value of a Function
-
-- R. Fletcher and M.J.D. Powell (1963) A Rapidly Convergent Descent Method for Minimization
-
-- L.A. Rastrigin (1965) Solution of inverse problems by statistical optimization methods
-
-- M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
-
-- M.A. Schumer and K. Steiglitz (1968) Adaptive step size random search
-
-- L.J. White and R.G. Day (1971) An Evaluation of Adaptive Step-Size Random Search
-
-- J. Mockus, V. Tiesis, A. Zilinskas (1978) The Application of Bayesian Methods for Seeking the Extremum
-
-- J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
-
-- ...
-
-- [CMAES 1996 - 2014](https://cma-es.github.io/)
-
-- ...
-
-- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
-
-Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to pure list processing (DEs) too, and I do not think AI or RL is the way here.
-
-We need better mechanisms to get out of entrapment. Autoresearch is a joke. RL is a premature optimization. AI will spit out code about "basins" without noticing that the concept is undefined.
-
-"What are we going to do with layers of ill-conditioning or increasing D>10 to begin with? Be critical, avoid being sycophantic."
-
-Usually nothing good comes out of these discussions in 2026.
-
-The Tunnelling Method, The Filled Function Method? See Aimo Törn and Antanas Žilinskas (1987) Global Optimization and some recent works, it could be something.
-
-## Evaluation Budgets
-
-[ARRDE 2026:](https://arxiv.org/pdf/2511.18429)
-
-_"For CEC2017, the algorithm was tested on 29 problems at dimensions 10, 30, 50, and 100, with the maximum number of function evaluations set to Nmax = 10^4 × D. Following the CEC2017 guidelines, problem
-F2 (the shifted and rotated Rastrigin function) was excluded due to numerical instability in higher dimensions. For CEC2020, the algorithm was evaluated on 10 problems at dimensions 5, 10, 15, and 20, with the
-corresponding evaluation budgets set to Nmax = 5 × 10^4, 10^6, 3 × 10^6, and 10^7. For CEC2022, the algorithm
-was tested on 12 problems at dimensions 10 and 20, using Nmax = 2 × 10^5 and 10^6, respectively. It is worth
-noting that although the CEC2017 suite contains higher-dimensional problems, it uses substantially lower
-evaluation budgets compared with the CEC2020 and CEC2022 suites. Conversely, CEC2020 represents the
-opposite extreme: relatively low-dimensional problems paired with exceptionally large evaluation budgets._
-
-_For the CEC2019 100-Digit Challenge, algorithms are evaluated under an effectively unlimited time budget. In this study, we impose a practical limit of Nmax = 10^8. The dimensionality of the problems ranges
-from 9 to 18, with most being 10-dimensional. For each problem, the number of correctly retrieved digits (up
-to the 10th decimal place) is recorded, and the final ranking is determined based on the average number of
-correct digits achieved in the best 25 out of 51 runs._
-
-_The CEC2011 real-world optimization suite comprises 22 problems with dimensionalities ranging from
-6 to 212. These problems are derived from simplified formulations of practical engineering tasks, including
-FM sound wave parameter estimation, Lennard–Jones and Tersoff potential minimization, spread-spectrum
-radar polyphase code design, transmission network expansion planning (TNEP), transmission pricing, circular antenna array design, static and dynamic economic load dispatch (ELD/DED), hydrothermal scheduling, and spacecraft trajectory optimization for the Messenger and Cassini 2 missions. Several of the original
-problems include inequality constraints in addition to bound constraints. Since our focus in this study is
-on bound-constrained optimization, these inequality constraints are omitted. Despite their simplifications,
-many CEC2011 problems remain very challenging due to their high dimensionality and multimodal landscapes. Following the CEC2011 benchmarking protocol, we evaluate all algorithms under three functionevaluation budgets: Nmax = 5 × 10^4
-, 10^5, and 1.5 × 10^5."_
-
-Kindergarten budgets, but they still advance DFO, paradoxically.
 
 ### Testing ARRDE
 
@@ -475,19 +356,19 @@ ARRDE can be inconsistent w.r.t. increasing budgets, e.g. F25 CEC-2017 D=20 seed
 Also, when setting a budget say to 200M, the first 10M evals can lead to a better result than rerunning
 the whole thing with 10M evals or 20M evals, and this is not so predictable due to population size reduction and global phases.
 
-On F24 CEC-2017, ARRDE is picky with seeding or whether zero is included in the initial population.
+On F24 CEC-2017, ARRDE can be very picky with seeding or whether zero is included in the initial population, unless it is used in the special restart mode, read below.
 
 ARRDE adds (to the jSO algorithm) global phases with some intricate refinement machinery via merged local intervals acting as an implementation of [Tabu Search](https://github.com/zarankumar/tabu-search).
 
 Decent up to D=10, afterwards every problem becomes a special case. Might work spectacularly (F24 CEC-2017 D=20), but may also lead to nowhere (F25 CEC-2017 D=20). Generally very bad with increasing D>10 as the experiments with F24 BBOB-2009 for D=10, 20,40, 100 would show.
 
-ARRDE also becomes extremely slow to run beyond 200M-500M evals, this is fixable, but not in the current edition. R6 runs about 5x times faster when evals reach billions.
+ARRDE also becomes extremely slow to run beyond 200M evals.
 
 ## CEC-2017 Composites
 
-CEC-2017 was an incredible step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology. They rule out any existing ES and DE.
+CEC-2017 was a step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology. They rule out any existing ES and DE.
 
-The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on them without being prepared to spend months without any results. All of the latest DEs fail on them, with an exception of the ARRDE on F22 and F24, and one still has to tinker a bit. I have verified this with [Minion](https://github.com/khoirulmuzakka/Minion).
+The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20 without being prepared to spend years going nowhere. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail there. ARRDE is the only exception, but also needs tinkering and solves only very few cases in D=20. Forget about D=100.
 
 What are these challenges?
 
@@ -497,7 +378,9 @@ In turn, these hybrids are rotated and scaled with different matrices and furthe
 
 Any single function is often already deceptive: multimodal, sometimes non-differentiable. It can already be ill-conditioned before being mixed into a hybrid. The latter in turn will get their own ill-conditioning. The key is ill-conditioning with multiple matrices in higher D>10. This is what kills modern ESes and DEs.
 
-There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches. However, this is less severe than multiple ill-condtioned matrices and increasing D>10.
+There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches. 
+
+Deceptiveness is less severe than multiple ill-condtioned matrices and increasing D>10.
 
 Initial functions/components extracted from multilayer mixing (which is still only 2 layers, more or less, in CEC-2017):
 
@@ -596,66 +479,64 @@ D=20, seed=20260829, 200M evals.
 | 2     | ARRDE        | 2243 | 2400 | 2899 | 3000 |
 | 3     | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
 
-- R6: solves F22, F24, F28, makes progress on F25 (in just 10M..50M evals).
+- R6 (my own ARRDE mod): solves F22, F24, F28, makes progress on F25 (in just 10M..50M evals).
 
 - ARRDE: solves F22 and F24. Can be pushed to 2700 on F25 with 500M..2B evals.
 
 - BIPOP-aCMAES lags already on F22 (also stalls on F21 at ~2300 when the other two get into ~2200).
 
-Not much progress on F21, F23, F26, F27, F29, F30.
+F21, F23, F26, F27, F29, F30 remained unsolved.
 
 A month later:
 
-ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 looks solvable.
+Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 is solvable.
 
-R6 is now only better on F25 in D=20 (f=2600), but since it still does not nail it, I put it on hold. It runs 5x faster than ARRDE (in real time), but fixed size lists and other optimizations are detrimental to the success rate when restarting on F24 CEC-2017 in D=20. R6 has a few extra mechanisms to deal with entrapment, but this works mostly on F25. Too many special cases to care really.
+It can also get into 2600 on F25 CEC-2017 via restarts or tunneling heuristics.
 
-There are two major conclusions from this whole research:
-
-- ARRDE can be modified to run 5x faster in real time than it does now.
-
-- There are special modes which are more effective than default.
-
-- There are a few extra mechanisms which improve ARRDE on F25 in D=20, but they also add parameters and reduce performance somewhere else, so I am not pushing this at the moment.
+I put R6 on hold for now. It runs 5x faster in real time, but it does not solve anything new compared to ARRDE.
 
 ### Personal Notes
 
 - ARRDE is the first algorithm to solve a CEC-2017 composite in D=20. No matrices, think about it.
 
-- Three composites are already solvable in D=20: F22, F24, and F28. F28 turns out to be 100x less demanding than F22/F24.
+- Three composites are already solvable in D=20: F22, F24, and F28.
 
-- F25 is solvable in D=10 (R6, <50M evals, vanilla ARRDE will get there too).
+- F25 is solvable in D=10 (R6, <50M evals, vanilla ARRDE will get there too). BIPOP-aCMAES does not solve it.
 
-- For larger budgets and tougher problems it might make sense to shrink default ARRDE popsize to 50 and wrap it inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals.
+- For larger budgets it might make sense to shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals.
 
-- BIPOP-aCMAES hits the wall already with the first layer of multiple ill-conditioned matrices. Imagine layers and layers of these under nonlinearities. It is so bad on F25 already in D=10 (f=2898).
+- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
-- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40.
+- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- CMAES is a niche algorithm now (2026). I would use it only for super tiny budgets (in Bayesian Optimization, directly, without surrogates and mods). The algorithm has a lot of reasonable massively-tested parameter doubling/halving so it is very frugal with eval numbers. Include scipy BFGS or SLSQP here too.
+- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. DEs do not scale beyond D>10.
 
-- BIPOP-aCMAES improves CMAES vastly, but at the expense of doing the grid search over popsize and sigma0. This is still very frugal due to doubling, but the search is in 2D, not 1D, and this is already competing with ARRDE. I would choose BIPOP over ARRDE for, say, <10M evals only, but it is not clear where this budget is critical. It is better to choose ARRDE with >100M evals as this is superior in the presence of ill-conditioning/stiffness, so the role of BIPOP is rather moot. Still valuable on smaller budgets and beyond D>10, but do not expect miracles on the composites.
+- Tunneling/filling (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) do not improve the state of the art (ARRDE). They can reduce evals and help reaching 2600 on F25 CEC-2017 in D=20, but this is not solving it (fopt=2500).
 
-- (mu, lambda)-ES will handle well-conditioned multimodality in, say, D=40, maybe even D=100. This is the only algorithm which is simple and achieves a lot without overengineering. It will disappoint in the presence of ill-conditioning.
+- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. Everything is pathetic in D=20. ARRDE is better, but also complex and overtuned.
 
-- Strive not to mix variables of different nature and scale, this complicates these algorithms enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
+- Better focus more on what is actually being optimized.
 
-- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. Also, when trapped, a restart won't do, one needs to backtrack, which is the weakest part of any continuous optimization algorithm, if it ever exists. The refinement procedure in the ARRDE is a tiny step in the right direction, but it is also clear that anything box/interval-based does not scale beyond D>10. This is also very tricky.
+- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is vital in physics, but normally not a black box, which rules out DFO.
 
-- I have tried to take backtracking more seriously. Instead of splitting coordinates and all that nonsense, assume each generation is a tree node, detect stalling, and backtrack. Each node has its population spread (tiny spreads to be avoided), and also distance from the last stalling point. It takes some tinkering to build the tree of reasonable size and properly walkable, but the main difficulty here is that exploring the tree still does not guarantee getting into a new/better region. This also adds extra parameters, e.g. whether to double distances during backtracking failures, should one restart at the node with the exact preserved population and just different RNG state to "branch", or should one change the population as well? Everything becomes too complex to be true.
+## Selected References
 
-- Another direction is tunneling/filling functions. The simplest way (heuristic) is to alternate with fixed budgets f-T-f-T minimizations where f is the cost and T is the tunneling function based on the minimal nearest neighbor distance to the archive of poles (local minima). There is one extra parameter to match in the exponent (how strongly to repel local minima), everything is beautiful and simple, one can use scipy BFGS or say ARRDE. Unfortunately, this does not solve F25 CEC-2017 in D=10 dimensions already, so I had to abandon this endeavor, despite that it looked like a much simpler and the only reasonable way to implement escapes and "backtracking" in R^D.
+- M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
-- I have spent about one day on the tunneling heuristic. There might be some parameter ranges and budgets where this works and makes progress, but it is impossible to test everything properly. A fundamental problem here is that T is equally hard if not harder to optimize. What to do when we simply cannot find a better region. Also, as the archive of poles grows, evaluating T slows down numerically, which is a problem in Python. One can make it very fast (hello FMM and electrostatics), but this is viable when prototyping shows promise. It does not.
+- J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
 
-- Ultimately, the most reasonable thing to do, but not reaching the state of the art, not in my tests. Also, in D=20, one needs millions of evals for f and T, and the whole optimization budget doubles and further gets multiplied by the number of alternation stages. This becomes cumbersome. scipy BFGS/SLSQP can be much faster, but not a good match as T is multimodal. They work, but not well enough. Also tried a single F-T with larger budgets (to escape the final ARRDE suboptimum), to no avail.
+- [CMAES 1996 - 2014](https://cma-es.github.io/)
 
-- Tunneling/filling work, and they look reasonable and understandable, but they do not improve the state of the art (ARRDE). Still, I get an uneasy feeling that this could be a viable thesis theme.
+- Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
+  BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
 
-- Regarding DEs, they are all pale compared to ARRDE. jSO improves tiny bit LSHADE, nothing as dramatic as advertised (came 2nd in the whole CEC-2017). j2020 was significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough and everything is pathetic in D=20.
+- Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
 
-- Better focus more on what is actually being optimized. DFO algorithms are blind, generic, maxed out. They are trying to be everything: tiny and big eval budgets, well-posed vs. stiff systems. They are generally a disaster beyond D>10, but in D=10 uniform sampling already gets us somewhere.
+- Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
 
-- Universalism adds complexity: C++/Rust/Nim are neither better C nor faster Python. No single motorcycle will ever work well for city, highway, and off-road riding.
+- Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
+  objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
 
-- One beautiful moment here is that (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is quite a work horse in condensed matter physics. A major caveat here is that this cost is typically not a black box/simulator, we define it, we have a gradient, which means we are no longer blind. This rules out DFO.
+- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
+
+Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to list processing (DEs) too, and I do not think AI or RL add much here.
