@@ -1,13 +1,13 @@
 > Three wise men from freezing North<br>
 > Keep telling me and holding forth<br>
 > The metal will not bring a yield<br>
-> The game's not worth the candle, nor the labor's field<br> 
-><br>
+> The game's not worth the candle, nor the labor's field<br>
+> <br>
 > But I am planting my aluminium cucumbers, ah-ah<br>
 > Right on a tarpaulin field<br>
 > Yes I am planting my aluminium cucumbers, ah-ah<br>
-> Right on a tarpaulin field<br> 
-><br> 
+> Right on a tarpaulin field<br>
+> <br>
 > [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
 
 <br>
@@ -325,8 +325,6 @@ Minion includes [one interesting comparison](https://minion-py.readthedocs.io/en
 
 D=10 does not generalize to D=20 at all. According to [Minion's notebook](https://minion-py.readthedocs.io/en/stable/l_bfgs_b_notebook.html), ARRDE solves F26 CEC-2017 in D=10 in fewer than 100K evals (reaching 2600). In my runs, for the zero starting point, seed = 20260815, ARRDE reaches only 2800 in 2B evals (F26 CEC-2017 D=20). Night and day.
 
-
-
 ### Testing ARRDE
 
 F25 CEC-2017 D=20, 1B evals: ARRDE f=2700, seed=20260829, single run takes 4.68 hours on i7 gen 4 16GB RAM.
@@ -378,7 +376,7 @@ In turn, these hybrids are rotated and scaled with different matrices and furthe
 
 Any single function is often already deceptive: multimodal, sometimes non-differentiable. It can already be ill-conditioned before being mixed into a hybrid. The latter in turn will get their own ill-conditioning. The key is ill-conditioning with multiple matrices in higher D>10. This is what kills modern ESes and DEs.
 
-There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches. 
+There are separate research works with a deep focus on some components, see e.g. [Happy Cat Function](https://www.researchgate.net/publication/234024034_HappyCat_-_A_Simple_Function_Class_Where_Well-Known_Direct_Search_Algorithms_Do_Fail) which is a deceptive ridge generator designed to obfuscate ES and DE searches.
 
 Deceptiveness is less severe than multiple ill-condtioned matrices and increasing D>10.
 
@@ -501,8 +499,8 @@ F25 CEC-2017 in D=20 turns out to be a needle in haystack.
 
 The box is [-100, 100]^20.
 
-Around the global minimum, the sphere of radius 2.6 already produces points above f=2600, 
-but these are the best f-values of a wider deceptive region/attractor. 
+Around the global minimum, the sphere of radius 2.6 already produces points above f=2600,
+but these are the best f-values of a wider deceptive region/attractor.
 
 It is still hard to get even into that attractor, but most powerful algorithms (ARRDE with tinkering, not vanilla ARRDE) find it. The global minimum region is effectively of volume zero.
 
@@ -603,13 +601,27 @@ Sphere max  f = 2.629555808086666e+03
 Sphere mean f = 2.616090367154970e+03
 ```
 
-A sphere of radius 2.5 in D=20 has a volume 2.3471e6. The whole search space is 200^200 ~ 1.048576e46. The volume ratio is 1e-40.
+A sphere of radius 2.5 in D=20 has a volume 2.3471e6. The whole search space is 200^200 ~ 1.048576e+46. The volume ratio is ~1e+40.
 
-Assume the same r=2.5, but D=10. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is 1e-19. Still tiny, but already searchable by the ARRDE with tinkering and budgets of O(1e8..1e9) evals. 
+This is also the amount of samples needed to hit the right region once under the assumption of "f-uniformity".
 
-In a way, current intelligence squares eval budgets which is already enough in D=10. For D=20, we need 10 extra orders, which might be doable with GPU clouds (in theory), but D=40 is beyond anything.
+In D=10, the radius turns out to be the same. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is ~1e18. Already searchable by the ARRDE with tinkering and budgets of O(1e8..1e9) evals, believe it or not.
 
-When someone says that "It works in D=10, but it will work in D=20, 40... I just don't want to waste time on longer runs", that means they are dealing with easy problems and are content with local optima.
+**F25 CEC-2017 Global Minimum Vicinity Volume**
+
+| D                      | 2          | 10         | 20         | 30         | 50          | 100         |
+| ---------------------- | ---------- | ---------- | ---------- | ---------- | ----------- | ----------- |
+| Radius                 | 2.3        | 2.5        | 2.5        | 1.6        | 0.925       | 0.3782      |
+| Volume                 | 1.6619e+01 | 2.4320e+04 | 2.3471e+06 | 2.9131e+01 | 3.5090e-15  | 1.4014e-82  |
+| 200<sup>D</sup>/Volume | 2.4069e+03 | 4.2105e+18 | 4.4675e+39 | 3.6860e+67 | 3.2086e+129 | 9.0454e+311 |
+
+When someone says that "It works in D=10, so it will work in D=20, 40... I just don't want to waste time on longer runs", one should better appreciate these numbers.
+
+This is only the worst case analysis as it does not take into account the cost function smoothness and that the global minimum vicinity might be much larger despite its f-values overlapping with parasitic suboptima. We do not see the actual trends/basins here.
+
+F24 CEC-2017 in D=20 turns out to be solvable by ARRDE. The global minimum vicinity radius is 9.3 in D=20. A volume of the sphere is ~6.044977e17, and the discussed ratio is 1.734624e+28. This is enormous, but still solvable due to an easier trend structure in F24.
+
+For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spherical volume is 2.1915e+25, and the ratio is 4.8995e+43 vs 3.6860e+67 in F25. In D=100, the F24 radius is 8.4. Its spherical volume is 6.3438e+52, and the ratio is 1.9983e+177 vs 9.0454e+311 in F25.
 
 ### Personal Notes
 
@@ -621,21 +633,19 @@ When someone says that "It works in D=10, but it will work in D=20, 40... I just
 
 - For larger budgets it might make sense to shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals.
 
-- Tunneling/filling (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) do not improve the state of the art (ARRDE). They can reduce evals and help reaching 2600 on F25 CEC-2017 in D=20, but this is not solving it (fopt=2500).
+- Tunneling/filling (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) do not solve F25 in D=20. They can reduce evals and help reaching 2600, but this is not solving it (fopt=2500).
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
-- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. ARRDE is much better, but also complex, overtuned, and hopeless on tougher cases in D=20.
+- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. ARRDE is better, but also complex, overtuned, and hopeless on tougher cases already in D=20.
 
-- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is vital in physics, but normally not a black box, which rules out DFO.
+- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which kind of rules out ES, sadly.
 
 - F25 CEC-2017 in D=20 is a tough nut to crack. This problem defies mechanisms to escape local minima. It seems to be impossible to identify and exclude regions that drop anything to f=2600 instead of fopt=2500, at least not with lists, boxes, and ellipsoids.
 
-- The difficulty is not in multimodality, stiffness, limited budgets per se. These can lead to solvable problems. Solvability depends a lot on how narrow the global optimum is for D>10. If a well is such that its size in a single dimension is about 0.1% or 1% of the searchable coordinate range, this is still solvable in D=10, but not in D=20 as the F25 CEC-2017 challenge indicates.
-
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- I do not expect much progress in DFO in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. DEs do not scale beyond D>10 and are already very ugly codes with so many parameters to tune.
+- I do not expect much progress in DFO in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning (stiffness). DEs do not scale beyond D>10 and are already very ugly codes with so many parameters to tune.
 
 - Instead of ES or DE, better focus more on what is actually being optimized.
 
@@ -658,8 +668,10 @@ When someone says that "It works in D=10, but it will work in D=20, 40... I just
   objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
 
 - Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
-Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)  
+  Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
-Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to list processing (DEs) too, and I do not think AI or RL add much here.
+Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to list processing (DEs) too.
+
+Also, I do not think AI and RL can add much here. Nor do I think ES/DE add much to AI and RL.
