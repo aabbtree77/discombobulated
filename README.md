@@ -273,26 +273,28 @@ A preliminary view:
 | ------------ | ------------------ | ------------------ | ----------------- | ----------------- |
 | ES           | >1B                | <10M f=102.61      | >200M f=2800      | >1B f=2900        |
 | BIPOP-aCMAES | <50K               | <10M f=102.61      | =200M f=2500      | =200M f=2899      |
-| ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2600        |
+| ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2700        |
 ```
 
 - ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. Outstanding only with mild condition numbers (up to ~1000, still solves F18 BBOB-2009). It is sensitive w.r.t. starting points, but this is nothing serious.
 
-- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. It does not solve F25 CEC-2017 already in D=10.
+- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. Face-plants on F25 CEC-2017 already in D=10.
 
-- ARRDE: pushes the frontier, but it is some hairy C++ list processing and becomes interesting only with budgets larger than 1e7xD. It completely solves F24 CEC-2017 (!), yet cannot nail F25 CEC-2017. Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES.
+- ARRDE: pushes the frontier, but it is some hairy C++ list processing and becomes interesting only with budgets larger than 1e7xD. It completely solves F24 CEC-2017 (in D=20), yet cannot nail F25 CEC-2017 (in D=20). Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES.
 
 Scroll down for more benchmarking on CEC-2017.
 
 ## Anything Better Out There?
 
-- DEs lose their quality very rapidly w.r.t. increasing D beyond 10.
+- DEs lose their quality w.r.t. increasing D beyond 10, try F24 BBOB-2009 in D=40 which is solvable by ES.
 
-- ES/CMAES are worse at ill-conditioning than DEs.
+- ES/CMAES are much worse at ill-conditioning than DEs, try F24 CEC-2017 in D=20, or F25 CEC-2017 in D=10, both solvable by ARRDE.
+
+- Nothing solves F25 CEC-2017 in D=20.
 
 ### CMAES Mods?
 
-- Lots of CMAES complications exist, but I could not get anything from them so far, e.g.
+- Lots of CMAES complications exist, but I could not get anything from them, e.g.
 
   Dimitar Nedanovski et al. (2026) [MSC-CMA-ES: Structure-Aware Restarts for CMA-ES via Cyclic Nearest-Better Basin Discovery](https://arxiv.org/abs/2606.15830), [Github](https://github.com/snenovgmailcom/cma_es_project/tree/main)
 
@@ -306,16 +308,16 @@ Scroll down for more benchmarking on CEC-2017.
 
   No difference, except that it is much faster to test than pycma and MSC-CMA-ES and is integrated into [Minion](https://github.com/khoirulmuzakka/Minion), though we did have libcmaes before.
 
-- Simplifications exist, but I am not sure what to do with them, e.g.
+- Simplifications exist, but what to do with them?
 
   Zhenhua Li and Qingfu Zhang (2017) [A Simple Yet Efficient Rank One Update for Covariance
   Matrix Adaptation](https://arxiv.org/abs/1710.03996)
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-  In D up to 10, ARRDE is vastly superior on tougher challenges with very large budgets, but it fails on the CEC-2017 composites in D=20 despite a few exceptions.
+  In D up to 10, ARRDE is vastly superior on tougher challenges with very large budgets, but everything fails on the CEC-2017 composites in D=20, with a few exceptions.
 
-### Dual Annealing?
+### Dual Annealing? Nope.
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
 
@@ -362,11 +364,13 @@ Decent up to D=10, afterwards every problem becomes a special case. Might work s
 
 ARRDE also becomes extremely slow to run beyond 200M evals.
 
+The best we have, but might need some tinkering with budgets and restarts.
+
 ## CEC-2017 Composites
 
 CEC-2017 was a step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology. They rule out any existing ES and DE.
 
-The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20 without being prepared to spend years going nowhere. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail there. ARRDE is the only exception, but also needs tinkering and solves only very few cases in D=20. Forget about D=100.
+The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20 without being prepared to spend years going nowhere. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail on the composites in D>10, with an exception of ARRDE in a few cases.
 
 What are these challenges?
 
@@ -502,7 +506,7 @@ The box is [-100, 100]^20.
 Around the global minimum, the sphere of radius 2.6 already produces points above f=2600,
 but these are the best f-values of a wider deceptive region/attractor.
 
-It is still hard to get even into that attractor, but most powerful algorithms (ARRDE with tinkering, not vanilla ARRDE) find it. The global minimum region is effectively of volume zero.
+It is still hard to get even into that f=2600 attractor, but the most powerful algorithms (e.g. ARRDE with tinkering, not vanilla ARRDE) find it.
 
 ```bash
 ==============================================================================
@@ -603,9 +607,9 @@ Sphere mean f = 2.616090367154970e+03
 
 A sphere of radius 2.5 in D=20 has a volume 2.3471e6. The whole search space is 200^200 ~ 1.048576e+46. The volume ratio is ~1e+40.
 
-This is also the amount of samples needed to hit the right region once under the assumption of "f-uniformity".
+This would be the amount of samples needed to hit the right region once, under the assumption of "f-uniformity".
 
-In D=10, the radius turns out to be the same. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is ~1e18. Already searchable by the ARRDE with tinkering and budgets of O(1e8..1e9) evals, believe it or not.
+In D=10, the radius turns out to be the same. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is ~1e18. Already searchable by ARRDE with budgets of O(1e8..1e9) evals, believe it or not.
 
 **F25 CEC-2017 Global Minimum Vicinity Volume**
 
@@ -617,7 +621,7 @@ In D=10, the radius turns out to be the same. A sphere now has a volume 2.432025
 
 When someone says that "It works in D=10, so it will work in D=20, 40... I just don't want to waste time on longer runs", one should better appreciate these numbers.
 
-This is only the worst case analysis as it does not take into account the cost function smoothness and that the global minimum vicinity might be much larger despite its f-values overlapping with parasitic suboptima. We do not see the actual trends/basins here.
+On the other hand, this is the worst case analysis. It does not take into account the cost function smoothness and that the global minimum vicinity might be much larger despite its f-values overlapping with suboptima. We do not see the actual trends/basins, how attractive that narrow gap actually is.
 
 F24 CEC-2017 in D=20 turns out to be solvable by ARRDE. The global minimum vicinity radius is 9.3 in D=20. A volume of the sphere is ~6.044977e17, and the discussed ratio is 1.734624e+28. This is enormous, but still solvable due to an easier trend structure in F24.
 
