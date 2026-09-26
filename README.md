@@ -639,7 +639,7 @@ When someone says that "It works in D=10, but it will work in D=20, 40... I just
 
 - Instead of ES or DE, better focus more on what is actually being optimized.
 
-## Selected References
+## The Past
 
 - M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
@@ -656,6 +656,9 @@ When someone says that "It works in D=10, but it will work in D=20, 40... I just
 
 - Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
   objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
+
+- Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
+Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)  
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
