@@ -495,6 +495,122 @@ It can also get into 2600 on F25 CEC-2017 via restarts or tunneling heuristics.
 
 I put R6 on hold for now. It runs 5x faster in real time, but it does not solve anything new compared to ARRDE.
 
+## Why Some Composites are not Solvable
+
+F25 CEC-2017 in D=20 turns out to be a needle in haystack.
+
+The box is [-100, 100]^20.
+
+Around the global minimum, the sphere of radius 2.6 already produces points above f=2600, 
+but these are the best f-values of a wider deceptive region/attractor. 
+
+It is still hard to get even into that attractor, but most powerful algorithms (ARRDE with tinkering, not vanilla ARRDE) find it. The global minimum region is effectively of volume zero.
+
+```bash
+==============================================================================
+CEC2017 F25 / D=20
+==============================================================================
+Benchmark f_opt : 2.500000000000000e+03
+Evaluated f(CENTER): 2.500000000000000e+03
+Difference from benchmark optimum: 0.000000000000000e+00
+
+Global optimum coordinates:
+x[ 1] =  9.5857011347942525e+00
+x[ 2] =  7.3284069743605357e+01
+x[ 3] = -2.0094577798663906e+01
+x[ 4] =  1.7371653140229942e+01
+x[ 5] =  5.9574127940262727e+01
+x[ 6] = -7.3501078371657567e+00
+x[ 7] = -7.2252707276610991e+01
+x[ 8] =  7.1523160505817813e+01
+x[ 9] = -3.0593826926589863e+01
+x[10] =  2.9168098455838908e+01
+x[11] = -4.8827527560679016e+00
+x[12] = -2.0297992276166561e+01
+x[13] = -2.9676773673704254e+01
+x[14] =  6.9616639408104419e+01
+x[15] = -2.0525248447677704e+01
+x[16] =  6.3380734488079668e+01
+x[17] =  5.0897438177325498e+01
+x[18] = -2.7404310164695751e+01
+x[19] =  4.2375220020476362e+01
+x[20] = -6.8372003363618632e+01
+
+Sphere radius requested : 2.600000000000
+Number of sphere points : 20
+Random seed             : 20260926
+
+idx   distance from CENTER          f(x)
+---   ----------------------   ----------------------
+  1        2.599999999999998    2.629636086737374e+03
+  2        2.600000000000004    2.625406875661240e+03
+  3        2.599999999999998    2.622794897119958e+03
+  4        2.600000000000001    2.619765718635950e+03
+  5        2.599999999999998    2.630442065951148e+03
+  6        2.599999999999994    2.633805380061843e+03
+  7        2.600000000000004    2.609663671141000e+03
+  8        2.599999999999995    2.623780417555373e+03
+  9        2.599999999999998    2.631237490944540e+03
+ 10        2.599999999999995    2.610352600002223e+03
+ 11        2.600000000000003    2.615985974975741e+03
+ 12        2.600000000000000    2.614363551126151e+03
+ 13        2.600000000000002    2.637206051053545e+03
+ 14        2.600000000000001    2.604314325506584e+03
+ 15        2.600000000000001    2.618162146817209e+03
+ 16        2.600000000000000    2.620541351031640e+03
+ 17        2.600000000000000    2.632102145035525e+03
+ 18        2.600000000000005    2.619249925266242e+03
+ 19        2.600000000000000    2.622497903425905e+03
+ 20        2.600000000000000    2.632773260194739e+03
+
+Sphere min  f = 2.604314325506584e+03
+Sphere max  f = 2.637206051053545e+03
+Sphere mean f = 2.622704091912197e+03
+```
+
+Even at 2.5 it is still 1/20 chance to see the direction below 2600, any mu-averaging would lose it:
+
+```bash
+Sphere radius requested : 2.500000000000
+Number of sphere points : 20
+Random seed             : 20260926
+
+idx   distance from CENTER          f(x)
+---   ----------------------   ----------------------
+  1        2.500000000000000    2.622540334827559e+03
+  2        2.499999999999998    2.618613571225004e+03
+  3        2.500000000000000    2.616154304786483e+03
+  4        2.500000000000000    2.613354887936021e+03
+  5        2.500000000000000    2.623250035207675e+03
+  6        2.499999999999998    2.626366569770741e+03
+  7        2.500000000000002    2.604007963855981e+03
+  8        2.500000000000002    2.617063556581270e+03
+  9        2.499999999999996    2.623973395079520e+03
+ 10        2.500000000000002    2.604645806623607e+03
+ 11        2.500000000000000    2.609856338658577e+03
+ 12        2.500000000000003    2.608341155895762e+03
+ 13        2.499999999999999    2.629555808086666e+03
+ 14        2.500000000000001    2.599056596278414e+03
+ 15        2.499999999999998    2.611868607211285e+03
+ 16        2.500000000000004    2.614081095829475e+03
+ 17        2.499999999999998    2.624817280430716e+03
+ 18        2.499999999999997    2.612874689563205e+03
+ 19        2.500000000000000    2.615887632205078e+03
+ 20        2.499999999999999    2.625497713046359e+03
+
+Sphere min  f = 2.599056596278414e+03
+Sphere max  f = 2.629555808086666e+03
+Sphere mean f = 2.616090367154970e+03
+```
+
+A sphere of radius 2.5 in D=20 has a volume 2.3471e6. The whole search space is 200^200 ~ 1.048576e46. The volume ratio is 1e-40.
+
+Assume the same r=2.5, but D=10. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is 1e-19. Still tiny, but already searchable by the ARRDE with tinkering and budgets of O(1e8..1e9) evals. 
+
+In a way, current intelligence squares eval budgets which is already enough in D=10. For D=20, we need 10 extra orders, which might be doable with GPU clouds (in theory), but D=40 is beyond anything.
+
+When someone says that "It works in D=10, but it will work in D=20, 40... I just don't want to waste time on longer runs", that means they are dealing with easy problems and are content with local optima.
+
 ### Personal Notes
 
 - ARRDE is the first algorithm to solve a CEC-2017 composite in D=20. No matrices, think about it.
@@ -505,21 +621,23 @@ I put R6 on hold for now. It runs 5x faster in real time, but it does not solve 
 
 - For larger budgets it might make sense to shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals.
 
-- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
-
-- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
-
-- I do not expect much progress here in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. DEs do not scale beyond D>10.
-
 - Tunneling/filling (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) do not improve the state of the art (ARRDE). They can reduce evals and help reaching 2600 on F25 CEC-2017 in D=20, but this is not solving it (fopt=2500).
 
-- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. Everything is pathetic in D=20. ARRDE is better, but also complex and overtuned.
+- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
-- Better focus more on what is actually being optimized.
+- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. ARRDE is much better, but also complex, overtuned, and hopeless on tougher cases in D=20.
 
 - One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators. It is vital in physics, but normally not a black box, which rules out DFO.
 
-- F25 CEC-2017 in D=20 is a tough nut to crack. This problem defies mechanisms to escape local minima. It seems to be impossible to identify and exclude the region that drops anything to f=2600 instead of fopt=2500, at least not with lists, boxes, and ellipsoids.
+- F25 CEC-2017 in D=20 is a tough nut to crack. This problem defies mechanisms to escape local minima. It seems to be impossible to identify and exclude regions that drop anything to f=2600 instead of fopt=2500, at least not with lists, boxes, and ellipsoids.
+
+- The difficulty is not in multimodality, stiffness, limited budgets per se. These can lead to solvable problems. Solvability depends a lot on how narrow the global optimum is for D>10. If a well is such that its size in a single dimension is about 0.1% or 1% of the searchable coordinate range, this is still solvable in D=10, but not in D=20 as the F25 CEC-2017 challenge indicates.
+
+- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
+
+- I do not expect much progress in DFO in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning/stiffness. DEs do not scale beyond D>10 and are already very ugly codes with so many parameters to tune.
+
+- Instead of ES or DE, better focus more on what is actually being optimized.
 
 ## Selected References
 
