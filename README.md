@@ -481,21 +481,19 @@ D=20, seed=20260829, 200M evals.
 | 2     | ARRDE        | 2243 | 2400 | 2899 | 3000 |
 | 3     | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
 
-- R6 (my own ARRDE mod): solves F22, F24, F28, makes progress on F25 (in just 10M..50M evals).
+- R6 (my own ARRDE mod): solves F22, F24, F28, makes progress on F25 (solves it in D=10, but not in D=20).
 
-- ARRDE: solves F22 and F24. Can be pushed to 2700 on F25 with 500M..2B evals.
+- ARRDE: solves F22 and F24, worse than R6 on F25.
 
-- BIPOP-aCMAES lags already on F22 (also stalls on F21 at ~2300 when the other two get into ~2200).
+- BIPOP-aCMAES: clearly inferior.
 
 F21, F23, F26, F27, F29, F30 remained unsolved.
 
 A month later:
 
-Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts, and also F25 in D=10 is solvable.
+Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts.
 
-It can also get into 2600 on F25 CEC-2017 via restarts or tunneling heuristics.
-
-I put R6 on hold for now. It runs 5x faster in real time, but it does not solve anything new compared to ARRDE.
+I put R6 on hold for now. It solves F25 in D=10 and runs 5x faster than ARRDE in real time for very large budgets (>1B evals), but I believe ARRDE might be able to solve this problem too. More experiments are needed.
 
 ## Some Worst Case Analysis
 
@@ -621,7 +619,7 @@ In D=10, the radius turns out to be the same. A sphere now has a volume 2.432025
 
 When someone says that "It works in D=10, so it will work in D=20, 40... I just don't want to waste time on longer runs", one should better appreciate these numbers.
 
-Still, this analysis is too pessimistic. We do not see any geometry: trends/basins, how attractive that narrow gap actually is.
+On the other hand, these numbers are too pessimistic. A narrow gap can also be a funnel. We do not know the scope/attractiveness of the global minimum vicinity from these numbers. They can show that F24 is easier than F25 though.
 
 F24 CEC-2017 in D=20 turns out to be solvable by ARRDE. The global minimum vicinity radius is 9.3 in D=20. A volume of the sphere is ~6.044977e17, and the discussed ratio is 1.734624e+28. This is enormous, but still solvable due to an easier trend structure in F24.
 
@@ -633,25 +631,25 @@ For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spheri
 
 - Three composites are already solvable in D=20: F22, F24, and F28.
 
-- F25 is solvable in D=10 (R6, <50M evals, vanilla ARRDE will get there too). BIPOP-aCMAES does not solve it.
+- F25 is solvable in D=10 (R6, <50M evals). j2020 and BIPOP-aCMAES do not solve it. Vanilla ARRDE might be able to solve it with larger budgets, but I have not observed this in my 50x200M runs so far.
 
 - F25 CEC-2017 in D=20 is a tough nut to crack. This problem defies mechanisms to escape local minima. It seems to be impossible to identify and exclude regions that drop anything to f=2600 instead of fopt=2500, at least not with lists, boxes, and ellipsoids.
 
-- For very large budget, shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. Often, this will allow at least to reveal a promising seed.
+- For very large budgets, shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. This is often quicker or enough to reveal a promising seed.
 
 - Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide important mechanisms to escape entrapment, but in reality they just lead to certain exploration without solving F25 in D=20. Tunneling/filling introduces an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major problem with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian optimization. You had one problem to solve, now you have two or three (hyperparameters).
 
 - ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
-- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO on F24 and F25 in CEC-2017 D=10, but still not good enough. ARRDE is better, but also complex, overtuned, and hopeless on tougher cases already in D=20.
+- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO, but it does not solve F25 CEC-2017 D=10 and F24 CEC-2017 in D=20. j2020 is in my Top 2 DEs after ARRDE, but also rapidly loses its magic beyond D>10. It is also 3x slower to execute than ARRDE due to its crowding mechanism relying on distance computation which is expensive.
 
-- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which kind of rules out ES, sadly.
+- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which kind of rules out the ES, sadly.
 
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- I do not expect much progress in DFO in the nearest decade. RL/AI won't solve fundamental difficulties. CMAES halts at ill-conditioning (stiffness). DEs do not scale beyond D>10 and are already very ugly codes with so many parameters to tune.
+- RL/AI do not address fundamental difficulties. CMAES halts at ill-conditioning (stiffness). DEs do not scale beyond D>10, though the issue remains moot.
 
-- Instead of ES or DE, better focus more on what is actually being optimized.
+- Improve DEs or focus more on what is actually being optimized?!
 
 ## Some Additional References
 
@@ -676,4 +674,4 @@ For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spheri
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
-Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), but honestly farewell to list processing (DEs) too.
+Farewell to matrices and convergence proofs: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367), at least not in this domain.
