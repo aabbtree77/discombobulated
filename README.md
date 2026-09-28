@@ -263,7 +263,7 @@ A preliminary view:
 
 ```markdown
 | Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
-| ------------ | -----------------: | -----------------: | ----------------: | ----------------: |
+| :----------: | -----------------: | -----------------: | ----------------: | ----------------: |
 | ES           | >1B                | <10M f=102.61      | >200M f=2800      | >1B f=2900        |
 | BIPOP-aCMAES | <50K               | <10M f=102.61      | =200M f=2500      | =200M f=2899      |
 | ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2700        |
@@ -465,7 +465,7 @@ F21:
 D=20, seed=20260829, 200M evals.
 
 | Place | Algorithm    | F22  | F24  | F25  | F28  |
-| ----- | ------------ | ---: | ---: | ---: | ---: |
+| :---: | :----------: | ---: | ---: | ---: | ---: |
 | 1     | R6           | 2251 | 2438 | 2600 | 2804 |
 | 2     | ARRDE        | 2243 | 2400 | 2899 | 3000 |
 | 3     | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
@@ -601,7 +601,7 @@ In D=10, the radius is roughly the same. A sphere now has a volume 2.43202594745
 **F25 CEC-2017 Global Minimum Vicinity Volume**
 
 | D                      | 2          | 10         | 20         | 30         | 50          | 100         |
-| ---------------------- | ---------: | ---------: | ---------: | ---------: | ----------: | ----------: |
+| :--------------------: | ---------: | ---------: | ---------: | ---------: | ----------: | ----------: |
 | Radius                 | 2.3        | 2.5        | 2.5        | 1.6        | 0.925       | 0.3782      |
 | Volume                 | 1.6619e+01 | 2.4320e+04 | 2.3471e+06 | 2.9131e+01 | 3.5090e-15  | 1.4014e-82  |
 | 200<sup>D</sup>/Volume | 2.4069e+03 | 4.2105e+18 | 4.4675e+39 | 3.6860e+67 | 3.2086e+129 | 9.0454e+311 |
@@ -617,7 +617,7 @@ For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spheri
 When D=20, running ARRDE with 1M evals independently, including one of the 20 spherical points of the global vicinity (of a fixed radius) in the initial population each time, reveals that F24 is quite a funnel. The global minimum is still reachable from a sphere of radius 80.0 (a pessimistic estimate was 9.3). For F25, the radius increases only to 8.0 (pessimistic estimate 2.5).
 
 | Problem                 |        F24 |        F25 |
-| ----------------------- | ---------: | ---------: |
+| :---------------------: | ---------: | ---------: |
 | Radius                  |       80.0 |        8.0 |
 | Volume                  | 2.9753e+36 | 2.9753e+16 |
 | 200<sup>20</sup>/Volume |  3.5242e+9 | 3.5242e+25 |
