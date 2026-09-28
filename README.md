@@ -460,6 +460,12 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
+Note: 
+
+- F22 CEC-2017 = F8 CEC-2020
+- F24 CEC-2017 = F9 CEC-2020
+- F25 CEC-2017 = F10 CEC-2020
+
 ### Results with Selected CEC-2017 Composites
 
 D=20, seed=20260829, 200M evals.
@@ -630,35 +636,51 @@ For F25 in D=10, the pessimistic radius is 2.5, while the one from ARRDE runs is
 
 In any case, this should suffice to get a rough picture of how problems F24 and F25 differ in dimensions 10 and 20, why F24 is solvable in D=20 and why F25 is already shaky in D=10.
 
-Seeing all these epsilon improvements and eval games in competitions (as opposed to real problem solving), I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
+I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
 
-Unless one puts a bounty in the Indian market. Who knows how many Ramanujans are there. 
+Unless one places a bounty in the Indian market. Who knows how many Ramanujans are there.
 
-### Personal Notes
+### Some Further Research on CEC-2017 Composites
 
-- ARRDE is the first algorithm to solve a CEC-2017 composite in D=20. No matrices, think about it.
+- To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). 
 
-- Three composites are already solvable in D=20: F22, F24, and F28.
+- Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
-- F25 is solvable in D=10 (R6, <50M evals). j2020 and BIPOP-aCMAES do not solve it. Vanilla ARRDE might be able to solve it with larger budgets, but I have not observed this in my 50x200M runs so far.
+- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. It is ~3x slower to execute than ARRDE due to the j2020 crowding relying on distance computation. j2020 is miles ahead of ARRDE in simplicity.
 
-- F25 CEC-2017 in D=20 is a tough nut to crack.
+- AGSK solved F24 CEC-2017 D=15 as well.
 
-- For very large budgets, shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. This is often quicker or enough to reveal a promising seed.
+- IMODE also solved F24 CEC-2017 D=20. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not.
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but they also introduce an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major trouble with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
+- ARRDE with tiny popsize and restarts also solves F28 CEC-2017 D=20.
 
-- ARRDE/R6 are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
+- F25 is now solvable in D=10 (R6, <50M evals). Vanilla ARRDE, j2020, and BIPOP-aCMAES do not solve it.
 
-- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which rules out the ES, sadly.
+References:
 
-- jSO improves tiny bit LSHADE, but j2020 is significantly better than LSHADE/jSO. j2020 does not solve F25 CEC-2017 D=10 and F24 CEC-2017 in D=20. It is in my Top 2 DEs after ARRDE, but also rapidly loses its magic beyond D>10. It is also 3x slower to execute than ARRDE due to its crowding mechanism relying on distance computation.
+- Janez Brest et al. (2020) [Differential Evolution Algorithm for Single Objective Bound-Constrained Optimization: Algorithm j2020](https://vigir.missouri.edu/~gdesouza/Research/Conference_CDs/IEEE_WCCI_2020/CEC/Papers/E-24518.pdf)
+
+- Ali Wagdy et al. (2020) [Evaluating the Performance of Adaptive Gaining-Sharing Knowledge Based Algorithm on CEC 2020 Benchmark Problems](https://www.researchgate.net/publication/343837951_Evaluating_the_Performance_of_Adaptive_Gaining-_Sharing_Knowledge_Based_Algorithm_on_CEC_2020_Benchmark_Problems)
+
+- Karam M. Sallam at al. (2020) [Improved Multi-operator Differential Evolution Algorithm for Solving Unconstrained Problems](https://vigir.missouri.edu/~gdesouza/Research/Conference_CDs/IEEE_WCCI_2020/CEC/Papers/E-24365.pdf)
+
+- Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)  
+
+- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
+
+### Further Notes
+
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but this gets convoluted with recursivity. **The auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
+
+- DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10. 
+
+- CMAES and BIPOP-aCMAES occupy a niche of well-defined problems in 10 < D < 100 and small eval budgets on the Bayesian Optimization side of things. 
 
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- Better focus more on what is actually being optimized.
+- DEs are very cool, no dogma, pure creativity, but F25 CEC-2017 D=20 is quite a kryptonite.
 
-## Some Additional References
+## Farewell to Matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367)
 
 - M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
@@ -666,7 +688,7 @@ Unless one puts a bounty in the Indian market. Who knows how many Ramanujans are
 
 - [CMAES 1996 - 2014](https://cma-es.github.io/)
 
-- Aurore Blelly at al. (2018) [Stopping Criteria, Initialization, and Implementations of
+- Aurore Blelly et al. (2018) [Stopping Criteria, Initialization, and Implementations of
   BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
 
 - Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
@@ -679,6 +701,3 @@ Unless one puts a bounty in the Indian market. Who knows how many Ramanujans are
 - Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
   Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)
 
-- Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
-
-Farewell to matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367).
