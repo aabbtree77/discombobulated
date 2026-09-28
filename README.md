@@ -610,7 +610,7 @@ When someone says that "It works in D=10, so it will work in D=20, 40... I just 
 
 On the other hand, these numbers are too pessimistic. A narrow gap can also be a funnel. We do not know the scope/attractiveness of the global minimum vicinity from these numbers.
 
-F24 CEC-2017 in D=20 is solvable by ARRDE. The global minimum vicinity radius is 9.3 in D=20. A volume of the sphere is ~6.044977e17, and the discussed ratio is 1.734624e+28. This is enormous, but solvable.
+F24 CEC-2017 in D=20 is solvable by ARRDE. The global minimum vicinity radius is 9.3 in D=20. A volume of the sphere is ~6.044977e+17, and the discussed ratio is 1.734624e+28. This is enormous, but solvable.
 
 For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spherical volume is 2.1915e+25, and the ratio is 4.8995e+43 vs 3.6860e+67 in F25. In D=100, the F24 radius is 8.4. Its spherical volume is 6.3438e+52, and the ratio is 1.9983e+177 vs 9.0454e+311 in F25.
 
@@ -625,6 +625,14 @@ When D=20, running ARRDE with 1M evals independently, including one of the 20 sp
 F24 CEC-2017 in D=20 indicates that when the problem is solvable (by ARRDE), the worst case sampling complexity O(1e+28) shrinks to O(1e+9) which matches the budgets available to solve it.
 
 For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which is not enough to solve the problem. This somewhat indicates that simply increasing budgets and heavily restarting ARRDE with tweaks won't solve the problem as we are still 25-9=16 orders behind in sampling complexity. 
+
+For F25 in D=10, the pessimistic radius is 2.5, while the one from ARRDE runs is 8.1. The sampling complexity shrinks from O(1e+18) to O(1e+13). This is still 4 orders away from O(1e+9), but already much closer than O(1e+25). One should keep in mind that the estimates here are very crude and they underestimate vicinity radius. I use only 20 runs with 1M evals to save electricity, but the latter number should be at least 50M. 
+
+In any case, this should suffice to get a rough picture of how problems F24 and F25 differ in dimensions 10 and 20, why F24 is solvable in D=20 and why F25 is already shaky in D=10.
+
+Seeing all these epsilon improvements and eval games in competitions (as opposed to real problem solving), I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
+
+Unless one puts a bounty in the Indian market. Who knows how many Ramanujans are there. 
 
 ### Personal Notes
 
