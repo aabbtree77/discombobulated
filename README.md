@@ -15,9 +15,7 @@
   <img src="bbob2009vscec2017.png" alt="bbob2009 vs cec2017 as Venn diagrams with ill-cond vs multimodality" style="width: 90%; height: auto;" />
 </p>
 
-## In Search of the Best Derivative-Free Optimization Algorithm
-
-Do we need complex modern optimization algorithms?
+## Do we need complex modern optimization algorithms?
 
 The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning, stiffness), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
@@ -245,11 +243,9 @@ I have not seen any algorithm to go below 2900.
 
 "F10 is the Ellipsoidal Function (a high-conditioning, unimodal function). It is hard to optimize because it features an extreme condition number (around 1e6) combined with non-separability, meaning its axes are rotated and scale at vastly different rates."
 
-The ES becomes brittle with ill-conditioning.
-
 "A very rough rule of thumb is that without CMA, the number of evaluations are proportional to the condition number..." - Nikolaus Hansen, [Issue 356.](https://github.com/CMA-ES/pycma/issues/356)
 
-That number can be proprotional to the condition number squared... The ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
+ES becomes brittle with ill-conditioning. The eval number can be proprotional to the condition number squared... The (mu, lambda)-ES reaches f = -29.5 (when fopt = -54.94) on F10 BBOB-2009 in 1B evals with a constant step size 1e-3. After 1M evals it is still at f = 2.61e+07...
 
 After some more thorough testing, see [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), it is tempting to resort to ARRDE.
 
@@ -261,13 +257,13 @@ The figure above indicates that a large part of BBOB-2009, if not entirely the w
 
 CEC-2017 is a bigger challenge with functions which are both: multimodal and ill-contioned. Moreover, with a few exceptions, its F21-F30 functions are not solvable by any known method.
 
-Solvable = getting close to the global optimum within, say, 1% relative error in 1B evals in at least D=20. Everything is easy in D=10.
+Practically, solvable means getting close to the global optimum within, say, 1% relative error in 1B evals. For CEC-2017 specifically, solvable means reaching the absolute error smaller than 100.0. F24 CEC-2017 is solved if one reaches 2400s, not 2500. F25 CEC-2017 is solved if one reaches 2500s, not 2600. 
 
 A preliminary view:
 
 ```markdown
 | Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
-| ------------ | ------------------ | ------------------ | ----------------- | ----------------- |
+| ------------ | -----------------: | -----------------: | ----------------: | ----------------: |
 | ES           | >1B                | <10M f=102.61      | >200M f=2800      | >1B f=2900        |
 | BIPOP-aCMAES | <50K               | <10M f=102.61      | =200M f=2500      | =200M f=2899      |
 | ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2700        |
@@ -277,7 +273,7 @@ A preliminary view:
 
 - BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. Face-plants on F25 CEC-2017 already in D=10.
 
-- ARRDE: pushes the frontier, but it is some hairy C++ list processing and becomes interesting only with budgets larger than 1e7xD. It completely solves F24 CEC-2017 (in D=20), yet cannot nail F25 CEC-2017 (in D=20). Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES.
+- ARRDE: completely solves F24 CEC-2017 (in D=20), yet cannot nail F25 CEC-2017 (in D=20, but D=10 is already difficult, requires tinkering, vanilla setup won't do). Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES. ARRDE is the best DE in my experience.
 
 Scroll down for more benchmarking on CEC-2017.
 
@@ -361,7 +357,7 @@ Code execution slows down superlinearly w.r.t. increasing number of evals.
 
 ## CEC-2017 Composites
 
-CEC-2017 was a step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology. They rule out any existing ES and DE.
+CEC-2017 was a step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology to date (2026). They rule out any existing ES and DE.
 
 The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20 without being prepared to spend years going nowhere. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail on the composites in D>10, with an exception of ARRDE in a few cases.
 
@@ -469,7 +465,7 @@ F21:
 D=20, seed=20260829, 200M evals.
 
 | Place | Algorithm    | F22  | F24  | F25  | F28  |
-| ----- | ------------ | ---- | ---- | ---- | ---- |
+| ----- | ------------ | ---: | ---: | ---: | ---: |
 | 1     | R6           | 2251 | 2438 | 2600 | 2804 |
 | 2     | ARRDE        | 2243 | 2400 | 2899 | 3000 |
 | 3     | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
@@ -600,12 +596,12 @@ A sphere of radius 2.5 in D=20 has a volume 2.3471e6. The whole search space is 
 
 This would be the amount of samples needed to hit the right region once, under the assumption of "f-uniformity".
 
-In D=10, the radius is roughly the same. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is ~1e18. Already searchable by ARRDE with budgets of O(1e8..1e9) evals, believe it or not.
+In D=10, the radius is roughly the same. A sphere now has a volume 2.43202594745e4. The whole box is 200^100 ~ 1.024e23. The volume ratio is ~1e18. Already searchable with budgets of O(1e8..1e9) evals, believe it or not.
 
 **F25 CEC-2017 Global Minimum Vicinity Volume**
 
 | D                      | 2          | 10         | 20         | 30         | 50          | 100         |
-| ---------------------- | ---------- | ---------- | ---------- | ---------- | ----------- | ----------- |
+| ---------------------- | ---------: | ---------: | ---------: | ---------: | ----------: | ----------: |
 | Radius                 | 2.3        | 2.5        | 2.5        | 1.6        | 0.925       | 0.3782      |
 | Volume                 | 1.6619e+01 | 2.4320e+04 | 2.3471e+06 | 2.9131e+01 | 3.5090e-15  | 1.4014e-82  |
 | 200<sup>D</sup>/Volume | 2.4069e+03 | 4.2105e+18 | 4.4675e+39 | 3.6860e+67 | 3.2086e+129 | 9.0454e+311 |
@@ -618,7 +614,7 @@ F24 CEC-2017 in D=20 is solvable by ARRDE. The global minimum vicinity radius is
 
 For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spherical volume is 2.1915e+25, and the ratio is 4.8995e+43 vs 3.6860e+67 in F25. In D=100, the F24 radius is 8.4. Its spherical volume is 6.3438e+52, and the ratio is 1.9983e+177 vs 9.0454e+311 in F25.
 
-Running ARRDE with 1M evals independently, including one of the 20 spherical points of the global vicinity (of a fixed radius) in the initial population each time, reveals that F24 is quite a funnel, the global minimum is still reachable from a sphere of radius 80.0 (a pessimistic estimate was 9.3). For F25 the radius increases to 8.0 (pessimistic estimate 2.5).
+When D=20, running ARRDE with 1M evals independently, including one of the 20 spherical points of the global vicinity (of a fixed radius) in the initial population each time, reveals that F24 is quite a funnel. The global minimum is still reachable from a sphere of radius 80.0 (a pessimistic estimate was 9.3). For F25, the radius increases only to 8.0 (pessimistic estimate 2.5).
 
 | Problem                 |        F24 |        F25 |
 | ----------------------- | ---------: | ---------: |
@@ -642,13 +638,13 @@ For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which 
 
 - For very large budgets, shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. This is often quicker or enough to reveal a promising seed.
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but life is not that simple. Tunneling/filling introduces an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major problem with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian optimization. You had one problem to solve, now you have two or three (hyperparameters).
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but they also introduce an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major problem with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
 
-- ARRDE/R6 suffer in D>10 and are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
+- ARRDE/R6 are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
-- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which kind of rules out the ES, sadly.
+- One pretty moment here is that simple (mu, lambda)-ES solves [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) in D=40. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box, which rules out the ES, sadly.
 
-- jSO improves tiny bit LSHADE, nothing as dramatic as advertised. j2020 is significantly better than LSHADE/jSO, but it does not solve F25 CEC-2017 D=10 and F24 CEC-2017 in D=20. j2020 is in my Top 2 DEs after ARRDE, but also rapidly loses its magic beyond D>10. It is also 3x slower to execute than ARRDE due to its crowding mechanism relying on distance computation.
+- jSO improves tiny bit LSHADE, but j2020 is significantly better than LSHADE/jSO. j2020 does not solve F25 CEC-2017 D=10 and F24 CEC-2017 in D=20. It is in my Top 2 DEs after ARRDE, but also rapidly loses its magic beyond D>10. It is also 3x slower to execute than ARRDE due to its crowding mechanism relying on distance computation.
 
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
