@@ -460,12 +460,6 @@ F21:
 2. High Conditioned Elliptic Function
 3. Rastrigin's Function
 
-Note: 
-
-- F22 CEC-2017 = F8 CEC-2020
-- F24 CEC-2017 = F9 CEC-2020
-- F25 CEC-2017 = F10 CEC-2020
-
 ### Results with Selected CEC-2017 Composites
 
 D=20, seed=20260829, 200M evals.
@@ -655,6 +649,12 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 - ARRDE with tiny popsize and restarts also solves F28 CEC-2017 D=20.
 
 - F25 is now solvable in D=10 (R6, <50M evals). Vanilla ARRDE, j2020, and BIPOP-aCMAES do not solve it.
+
+Note: 
+
+- F22 CEC-2017 = F8 CEC-2020
+- F24 CEC-2017 = F9 CEC-2020
+- F25 CEC-2017 = F10 CEC-2020
 
 References:
 
