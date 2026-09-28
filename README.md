@@ -638,7 +638,7 @@ For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which 
 
 - For very large budgets, shrink default ARRDE popsize to 50 and wrap ARRDE inside restarts. Say, 50 restarts with 20M budget per run instead of a single run with 1B evals. This is often quicker or enough to reveal a promising seed.
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but they also introduce an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major problem with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but they also introduce an extra trade-off between f-values and distances, which is tricky to tune. The subproblem gets stuck in its own local minima, unclear what happens when a list of poles starts growing. **The major trouble with these meta approaches is that the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
 
 - ARRDE/R6 are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly, in <10M evals.
 
