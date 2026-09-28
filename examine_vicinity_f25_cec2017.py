@@ -5,7 +5,7 @@ import minionpy as mpy
 # ============================================================
 # SETTINGS
 # ============================================================
-D = 30                       # any of: 2, 10, 20, 30, 50, 100
+D = 20                       # any of: 2, 10, 20, 30, 50, 100
 FUNCTION = 25
 
 # Physical Euclidean radius of the sphere.

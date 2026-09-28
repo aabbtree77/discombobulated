@@ -1,14 +1,11 @@
 > Three wise men from freezing North<br>
 > Keep telling me and holding forth<br>
 > The metal will not bring a yield<br>
-> The game's not worth the candle, nor the labor's field<br>
-> <br>
+> The game's not worth the candle, nor the labor's field<br> > <br>
 > But I am planting my aluminium cucumbers, ah-ah<br>
 > Right on a tarpaulin field<br>
 > Yes I am planting my aluminium cucumbers, ah-ah<br>
-> Right on a tarpaulin field<br>
-> <br>
-> [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
+> Right on a tarpaulin field<br> > <br> > [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
 
 <br>
 
@@ -621,6 +618,18 @@ F24 CEC-2017 in D=20 is solvable by ARRDE. The global minimum vicinity radius is
 
 For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spherical volume is 2.1915e+25, and the ratio is 4.8995e+43 vs 3.6860e+67 in F25. In D=100, the F24 radius is 8.4. Its spherical volume is 6.3438e+52, and the ratio is 1.9983e+177 vs 9.0454e+311 in F25.
 
+Running ARRDE with 1M evals independently, including one of the 20 spherical points of the global vicinity (of a fixed radius) in the initial population each time, reveals that F24 is quite a funnel, the global minimum is still reachable from a sphere of radius 80.0 (a pessimistic estimate was 9.3). For F25 the radius increases to 8.0 (pessimistic estimate 2.5).
+
+| Problem                 |        F24 |        F25 |
+| ----------------------- | ---------: | ---------: |
+| Radius                  |       80.0 |        8.0 |
+| Volume                  | 2.9753e+36 | 2.9753e+16 |
+| 200<sup>20</sup>/Volume |  3.5242e+9 | 3.5242e+25 |
+
+F24 CEC-2017 in D=20 indicates that when the problem is solvable (by ARRDE), the worst case sampling complexity O(1e+28) shrinks to O(1e+9) which matches the budgets available to solve it.
+
+For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which is not enough to solve the problem. This somewhat indicates that simply increasing budgets and heavily restarting ARRDE with tweaks won't solve the problem as we are still 25-9=16 orders behind in sampling complexity. 
+
 ### Personal Notes
 
 - ARRDE is the first algorithm to solve a CEC-2017 composite in D=20. No matrices, think about it.
@@ -643,7 +652,7 @@ For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spheri
 
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- Improve DEs or focus more on what is actually being optimized?!
+- Better focus more on what is actually being optimized.
 
 ## Some Additional References
 
