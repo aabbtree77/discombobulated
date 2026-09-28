@@ -640,29 +640,34 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 - Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
-- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. It is ~3x slower to execute than ARRDE due to the j2020 crowding relying on distance computation. j2020 is miles ahead of ARRDE in simplicity.
+- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. It is ~3x slower to execute than ARRDE due to the j2020 crowding relying on distance computation, but j2020 is a lot simpler than ARRDE.
 
 - AGSK solved F24 CEC-2017 D=15 as well.
 
-- IMODE also solved F24 CEC-2017 D=20. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not.
+- IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. 
 
-- ARRDE with tiny popsize and restarts also solves F28 CEC-2017 D=20.
+- ARRDE with tiny popsize and restarts also solves F28 CEC-2017 D=20. It is not clear if ARRDE is the only one. So many algorithms, and CEC-2022 made a silly move to create new composites. Keeping only D=10 and D=20 and fewer functions was a good move though.
 
-- F25 is now solvable in D=10 (R6, <50M evals). Vanilla ARRDE, j2020, and BIPOP-aCMAES do not solve it.
+- F25 CEC-2017 D=10 is now solvable too (R6, <50M evals). Vanilla ARRDE, j2020, and BIPOP-aCMAES do not solve it.
 
 Note: 
 
-- F22 CEC-2017 = F8 CEC-2020
-- F24 CEC-2017 = F9 CEC-2020
-- F25 CEC-2017 = F10 CEC-2020
+- F22 CEC-2017 = F8 CEC-2020 = F8 CEC-2021 (shift+bias+rotation)
+- F24 CEC-2017 = F9 CEC-2020 = F9 CEC-2021 (shift+bias+rotation)
+- F25 CEC-2017 = F10 CEC-2020 = F10 CEC-2021 (shift+bias+rotation)
 
 References:
 
 - Janez Brest et al. (2020) [Differential Evolution Algorithm for Single Objective Bound-Constrained Optimization: Algorithm j2020](https://vigir.missouri.edu/~gdesouza/Research/Conference_CDs/IEEE_WCCI_2020/CEC/Papers/E-24518.pdf)
 
+- Janez Brest et al. (2021) [Self-adaptive Differential Evolution Algorithm with Population Size Reduction for Single Objective
+Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-content/uploads/janez/CEC2021-j21.pdf)
+
 - Ali Wagdy et al. (2020) [Evaluating the Performance of Adaptive Gaining-Sharing Knowledge Based Algorithm on CEC 2020 Benchmark Problems](https://www.researchgate.net/publication/343837951_Evaluating_the_Performance_of_Adaptive_Gaining-_Sharing_Knowledge_Based_Algorithm_on_CEC_2020_Benchmark_Problems)
 
 - Karam M. Sallam at al. (2020) [Improved Multi-operator Differential Evolution Algorithm for Solving Unconstrained Problems](https://vigir.missouri.edu/~gdesouza/Research/Conference_CDs/IEEE_WCCI_2020/CEC/Papers/E-24365.pdf)
+
+- Vladimir Stanovov et al. (2021) [NL-SHADE-RSP Algorithm with Adaptive Archive and Selective Pressure for CEC 2021 Numerical Optimization](https://www.researchgate.net/publication/353782316_NL-SHADE-RSP_Algorithm_with_Adaptive_Archive_and_Selective_Pressure_for_CEC_2021_Numerical_Optimization)
 
 - Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)  
 
@@ -674,11 +679,13 @@ References:
 
 - DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10. 
 
-- CMAES and BIPOP-aCMAES occupy a niche of well-defined problems in 10 < D < 100 and small eval budgets on the Bayesian Optimization side of things. 
+- CMAES and BIPOP-aCMAES occupy a niche of well-defined problems in 10 < D < 100 and small eval budgets on the Bayesian Optimization side of things. Little interesting came from CMAES hybrids with DEs.
 
 - Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- DEs are very cool, no dogma, pure creativity, but F25 CEC-2017 D=20 is quite a kryptonite.
+- DEs are very powerful, no bourbakisms, pragmatic creativity, but there are walls like F25 CEC-2017 D=20 and nobody knows what to do about them, these problems seem to be abandoned.
+
+- I have improved ARRDE on F25 in D=10, but I am no longer sure there is much meaning in this domain after 2020.
 
 ## Farewell to Matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367)
 
