@@ -257,16 +257,16 @@ The figure above indicates that a large part of BBOB-2009, if not entirely the w
 
 CEC-2017 is a bigger challenge with functions which are both: multimodal and ill-contioned. Moreover, with a few exceptions, its F21-F30 functions are not solvable by any known method.
 
-Practically, solvable means getting close to the global optimum within, say, 1% relative error in 1B evals. For CEC-2017 specifically, solvable means reaching the absolute error smaller than 100.0. F24 CEC-2017 is solved if one reaches 2400s, not 2500. F25 CEC-2017 is solved if one reaches 2500s, not 2600. 
+Practically, solvable means getting close to the global optimum within, say, 1% relative error in 1B evals. For CEC-2017 specifically, solvable means reaching the absolute error smaller than 100.0. F24 CEC-2017 is solved if one reaches 2400s, not 2500. F25 CEC-2017 is solved if one reaches 2500s, not 2600.
 
 A preliminary view:
 
 ```markdown
-| Algorithm    | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
+|  Algorithm   | F10 BBOB-2009 D=40 | F24 BBOB-2009 D=40 | F24 CEC-2017 D=20 | F25 CEC-2017 D=20 |
 | :----------: | -----------------: | -----------------: | ----------------: | ----------------: |
-| ES           | >1B                | <10M f=102.61      | >200M f=2800      | >1B f=2900        |
-| BIPOP-aCMAES | <50K               | <10M f=102.61      | =200M f=2500      | =200M f=2899      |
-| ARRDE        | <500K              | =200M f=1.4895     | =200M f=2400      | =1B f=2700        |
+|      ES      |                >1B |      <10M f=102.61 |      >200M f=2800 |        >1B f=2900 |
+| BIPOP-aCMAES |               <50K |      <10M f=102.61 |      =200M f=2500 |      =200M f=2899 |
+|    ARRDE     |              <500K |     =200M f=1.4895 |      =200M f=2400 |        =1B f=2700 |
 ```
 
 - ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. Outstanding only with mild condition numbers (up to ~1000, still solves F18 BBOB-2009). It is sensitive w.r.t. starting points, but this is nothing serious.
@@ -464,25 +464,36 @@ F21:
 
 D=20, seed=20260829, 200M evals.
 
-| Place | Algorithm    | F22  | F24  | F25  | F28  |
+| Place |  Algorithm   |  F22 |  F24 |  F25 |  F28 |
 | :---: | :----------: | ---: | ---: | ---: | ---: |
-| 1     | R6           | 2251 | 2438 | 2600 | 2804 |
-| 2     | ARRDE        | 2243 | 2400 | 2899 | 3000 |
-| 3     | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
+|   1   |      R6      | 2251 | 2438 | 2600 | 2804 |
+|   2   |    ARRDE     | 2243 | 2400 | 2899 | 3000 |
+|   3   | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
 
-- R6 (my own ARRDE mod): solves F22, F24, F28, makes progress on F25 (solves it in D=10, but not in D=20).
+- R6 (my own ARRDE mod): solves F22, F24, F28, also F25 in D=10 (but not in D=20).
 
-- ARRDE: solves F22 and F24, worse than R6 on F25.
+- ARRDE: solves F22 and F24, also F25 in D=10 (but not in D=20). 
 
 - BIPOP-aCMAES: clearly inferior.
 
-F21, F23, F26, F27, F29, F30 remained unsolved.
+Not much can be said about F21, F23, F26, F27, F29, and F30. 
+
+They can be solvable or non-solvable. More likely unsolvable in D=20.
 
 A month later:
 
-Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts.
+Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts. 
 
-I put R6 on hold for now. It solves F25 in D=10 and runs 5x faster than ARRDE in real time for very large budgets (>1B evals), but I believe ARRDE might be able to solve this problem too. More experiments are needed.
+However, restarts with tiny budgets are detrimental on F25 in D=10:
+
+|                Algorithm                |    f |
+| :-------------------------------------: | ---: |
+|                   R6                    | 2500 |
+|       ARRDE: 200M seed = 20260929       | 2500 |
+|        ARRDE: 50x20M seeds 0..49        | 2600 |
+| ARRDE: popsize = 50 50x20M seeds 0..49  | 2600 |
+
+I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements.
 
 ## Vicinity of the Global Minimum
 
@@ -493,7 +504,7 @@ The box is [-100, 100]^20.
 Around the global minimum, the sphere of radius 2.6 already produces points above f=2600,
 but these are the best f-values of a wider deceptive region/attractor.
 
-It is still hard to get even into that f=2600 attractor, but the most powerful algorithms (e.g. ARRDE with tinkering, not vanilla ARRDE) find it.
+It is still hard to get even into that f=2600 attractor. ARRDE requires tinkering.
 
 ```bash
 ==============================================================================
@@ -600,10 +611,10 @@ In D=10, the radius is roughly the same. A sphere now has a volume 2.43202594745
 
 **F25 CEC-2017 Global Minimum Vicinity Volume**
 
-| D                      | 2          | 10         | 20         | 30         | 50          | 100         |
+|           D            |          2 |         10 |         20 |         30 |          50 |         100 |
 | :--------------------: | ---------: | ---------: | ---------: | ---------: | ----------: | ----------: |
-| Radius                 | 2.3        | 2.5        | 2.5        | 1.6        | 0.925       | 0.3782      |
-| Volume                 | 1.6619e+01 | 2.4320e+04 | 2.3471e+06 | 2.9131e+01 | 3.5090e-15  | 1.4014e-82  |
+|         Radius         |        2.3 |        2.5 |        2.5 |        1.6 |       0.925 |      0.3782 |
+|         Volume         | 1.6619e+01 | 2.4320e+04 | 2.3471e+06 | 2.9131e+01 |  3.5090e-15 |  1.4014e-82 |
 | 200<sup>D</sup>/Volume | 2.4069e+03 | 4.2105e+18 | 4.4675e+39 | 3.6860e+67 | 3.2086e+129 | 9.0454e+311 |
 
 When someone says that "It works in D=10, so it will work in D=20, 40... I just don't want to waste time on longer runs", one should better appreciate these numbers.
@@ -616,19 +627,19 @@ For the curious, in D=30, the F24 global minimum vicinity radius is 10.0. Spheri
 
 When D=20, running ARRDE with 1M evals independently, including one of the 20 spherical points of the global vicinity (of a fixed radius) in the initial population each time, reveals that F24 is quite a funnel. The global minimum is still reachable from a sphere of radius 80.0 (a pessimistic estimate was 9.3). For F25, the radius increases only to 8.0 (pessimistic estimate 2.5).
 
-| Problem                 |        F24 |        F25 |
+|         Problem         |        F24 |        F25 |
 | :---------------------: | ---------: | ---------: |
-| Radius                  |       80.0 |        8.0 |
-| Volume                  | 2.9753e+36 | 2.9753e+16 |
+|         Radius          |       80.0 |        8.0 |
+|         Volume          | 2.9753e+36 | 2.9753e+16 |
 | 200<sup>20</sup>/Volume |  3.5242e+9 | 3.5242e+25 |
 
 F24 CEC-2017 in D=20 indicates that when the problem is solvable (by ARRDE), the worst case sampling complexity O(1e+28) shrinks to O(1e+9) which matches the budgets available to solve it.
 
-For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which is not enough to solve the problem. This somewhat indicates that simply increasing budgets and heavily restarting ARRDE with tweaks won't solve the problem as we are still 25-9=16 orders behind in sampling complexity. 
+For F25 in D=20, ARRDE shrinks complexity from O(1e+39) down to O(1e+25), which is not enough to solve the problem. This somewhat indicates that simply increasing budgets and heavily restarting ARRDE with tweaks won't solve the problem as we are still 25-9=16 orders behind in sampling complexity.
 
-For F25 in D=10, the pessimistic radius is 2.5, while the one from ARRDE runs is 8.1. The sampling complexity shrinks from O(1e+18) to O(1e+13). This is still 4 orders away from O(1e+9), but already much closer than O(1e+25). One should keep in mind that the estimates here are very crude and they underestimate vicinity radius. I use only 20 runs with 1M evals to save electricity, but the latter number should be at least 50M. 
+For F25 in D=10, the pessimistic radius is 2.5, while the one from ARRDE runs is 8.1. The sampling complexity shrinks from O(1e+18) to O(1e+13). This is still 4 orders away from O(1e+9), but already much closer than O(1e+25). One should keep in mind that the estimates here are very crude and they underestimate vicinity radius. I use only 20 runs with 1M evals to save electricity, but the latter number should be at least 50M.
 
-In any case, this should suffice to get a rough picture of how problems F24 and F25 differ in dimensions 10 and 20, why F24 is solvable in D=20 and why F25 is already shaky in D=10.
+In any case, this should suffice to get a rough picture of how problems F24 and F25 differ in dimensions 10 and 20, why F24 is solvable in D=20 and why F25 is already shaky in D=10 (shaky = none of the CEC-2020 contestants solved it).
 
 I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
 
@@ -636,7 +647,7 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 ### Some Further Research on CEC-2017 Composites
 
-- To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). 
+- To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set.
 
 - Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
@@ -644,13 +655,17 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 - AGSK solved F24 CEC-2017 D=15 as well.
 
-- IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. 
+- IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not.
 
-- ARRDE with tiny popsize and restarts also solves F28 CEC-2017 D=20. It is not clear if ARRDE is the only one. So many algorithms, and CEC-2022 made a silly move to create new composites. Keeping only D=10 and D=20 and fewer functions was a good move though.
+- ARRDE also solved F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals). 
 
-- F25 CEC-2017 D=10 is now solvable too (R6, <50M evals). Vanilla ARRDE, j2020, and BIPOP-aCMAES do not solve it.
+- ARRDE with popsize=50 and restartsx20M also solved F28 CEC-2017 D=20.
 
-Note: 
+It is likely there are more DEs (esp. the ones created in 2021-2026) solving these composites. I mostly looked into the literature on CEC-2020 and ran my own experiments with ARRDE. CEC-2021 is the last relevant competition as CEC-2022 has abandoned the CEC-2017 composites.
+
+Note:
+
+There is no separate CEC-2018 benchmark. This was literally the same problem set as CEC-2017 (for single objective bound constrained competition). Also:
 
 - F22 CEC-2017 = F8 CEC-2020 = F8 CEC-2021 (shift+bias+rotation)
 - F24 CEC-2017 = F9 CEC-2020 = F9 CEC-2021 (shift+bias+rotation)
@@ -661,7 +676,7 @@ References:
 - Janez Brest et al. (2020) [Differential Evolution Algorithm for Single Objective Bound-Constrained Optimization: Algorithm j2020](https://vigir.missouri.edu/~gdesouza/Research/Conference_CDs/IEEE_WCCI_2020/CEC/Papers/E-24518.pdf)
 
 - Janez Brest et al. (2021) [Self-adaptive Differential Evolution Algorithm with Population Size Reduction for Single Objective
-Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-content/uploads/janez/CEC2021-j21.pdf)
+  Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-content/uploads/janez/CEC2021-j21.pdf)
 
 - Ali Wagdy et al. (2020) [Evaluating the Performance of Adaptive Gaining-Sharing Knowledge Based Algorithm on CEC 2020 Benchmark Problems](https://www.researchgate.net/publication/343837951_Evaluating_the_Performance_of_Adaptive_Gaining-_Sharing_Knowledge_Based_Algorithm_on_CEC_2020_Benchmark_Problems)
 
@@ -669,7 +684,7 @@ Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-cont
 
 - Vladimir Stanovov et al. (2021) [NL-SHADE-RSP Algorithm with Adaptive Archive and Selective Pressure for CEC 2021 Numerical Optimization](https://www.researchgate.net/publication/353782316_NL-SHADE-RSP_Algorithm_with_Adaptive_Archive_and_Selective_Pressure_for_CEC_2021_Numerical_Optimization)
 
-- Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)  
+- Tomofumi Kitamura and Alex Fukunaga (2025) [Is Selection All You Need in Differential Evolution?](https://arxiv.org/abs/2506.14425)
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
@@ -677,15 +692,13 @@ Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-cont
 
 - Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but this gets convoluted with recursivity. **The auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
 
-- DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10. 
+- DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
 
-- CMAES and BIPOP-aCMAES occupy a niche of well-defined problems in 10 < D < 100 and small eval budgets on the Bayesian Optimization side of things. Little interesting came from CMAES hybrids with DEs.
+- DEs are very powerful on tough cases in D<=10. They bring some pragmatic creativity (no bourbakisms), but the wall with D=20 is looming there.
 
-- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. We can complicate this much further and no algorithm will ever catch up.
+- CMAES and BIPOP-aCMAES occupy a niche for easier costs in 10 < D < 100 with small eval budgets on the Bayesian Optimization side of things. Little interesting came from CMAES hybrids with DEs.
 
-- DEs are very powerful, no bourbakisms, pragmatic creativity, but there are walls like F25 CEC-2017 D=20 and nobody knows what to do about them, these problems seem to be abandoned.
-
-- I have improved ARRDE on F25 in D=10, but I am no longer sure there is much meaning in this domain after 2020.
+- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20, CEC-2022 simply abandoned them. We can complicate this much further and no algorithm will ever catch up.
 
 ## Farewell to Matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367)
 
@@ -707,4 +720,3 @@ Bound-Constrained Optimization: Algorithm j21](https://labraj.feri.um.si/wp-cont
 
 - Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
   Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)
-
