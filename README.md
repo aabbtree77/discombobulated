@@ -661,15 +661,15 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 - ARRDE with popsize=50 and restartsx20M also solved F28 CEC-2017 D=20.
 
-It is likely there are more DEs (esp. the ones created in 2021-2026) solving these composites. I mostly looked into the literature on CEC-2020 and ran my own experiments with ARRDE. CEC-2021 is the last relevant competition as CEC-2022 has abandoned the CEC-2017 composites.
-
-Note:
+There are more DEs (esp. the ones created in 2021-2026) solving some of these composites.
 
 There is no separate CEC-2018 benchmark. This was literally the same problem set as CEC-2017 (for single objective bound constrained competition). Also:
 
 - F22 CEC-2017 = F8 CEC-2020 = F8 CEC-2021 (shift+bias+rotation)
 - F24 CEC-2017 = F9 CEC-2020 = F9 CEC-2021 (shift+bias+rotation)
 - F25 CEC-2017 = F10 CEC-2020 = F10 CEC-2021 (shift+bias+rotation)
+
+CEC-2022 tried to be "unique", but CEC-2017 has returned (carried over in full) to CEC-2023..CEC-2026 competitions in the bound constrained single function track.
 
 References:
 
@@ -698,7 +698,7 @@ References:
 
 - CMAES and BIPOP-aCMAES occupy a niche for easier costs in 10 < D < 100 with small eval budgets on the Bayesian Optimization side of things. Little interesting came from CMAES hybrids with DEs.
 
-- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20, CEC-2022 simply abandoned them. We can complicate this much further and no algorithm will ever catch up.
+- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
 
 ## Farewell to Matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367)
 
