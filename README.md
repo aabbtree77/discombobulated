@@ -308,6 +308,29 @@ Scroll down for more benchmarking on CEC-2017.
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
+Some more papers I have been scrutinizing related to CMAES and matrices: 
+
+- M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
+
+- J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
+
+- [CMAES 1996 - 2014](https://cma-es.github.io/)
+
+- Aurore Blelly et al. (2018) [Stopping Criteria, Initialization, and Implementations of
+  BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
+
+- Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
+
+- Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
+
+- Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
+  objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
+
+- Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
+  Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)  
+
+See also [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367).
+
 ### Dual Annealing?
 
 scipy includes an algorithm called "dual annealing" (DA) which runs BFGS as local search. Scroll down [this code](https://github.com/sgubianpm/sdaopt/blob/master/sdaopt/_sda.py) for all the references. DA got visible first in the R community.
@@ -468,21 +491,25 @@ D=20, seed=20260829, 200M evals.
 | :---: | :----------: | ---: | ---: | ---: | ---: |
 |   1   |      R6      | 2251 | 2438 | 2600 | 2804 |
 |   2   |    ARRDE     | 2243 | 2400 | 2899 | 3000 |
-|   3   | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
+|   3   |    SLSQP*    | 2300 | 2500 | 2600 | 3100 | 
+|   4   | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
 
 - R6 (my own ARRDE mod): solves F22, F24, F28, also F25 in D=10 (but not in D=20).
 
 - ARRDE: solves F22 and F24, also F25 in D=10 (but not in D=20). 
 
-- BIPOP-aCMAES: clearly inferior.
+- SLSQP*: my own improvement over scipy SLSQP. Local minima are collected into the list of "poles" (300), 
+each of radius 3.0 during the optimization. When SLSQP gets stuck, it restarts anew with the previous local minimum added as a pole/constraint to avoid that minimum. Sort of tunneling/filling. A new starting point is the maximization endpoint reflected away from the nearest pole, to avoid dealing with extra parameters. Maximization follows minimization in an alternating manner to escape local minima. It is likely not to be essential, I believe j2020 or jDE100 used this and dropped it, nobody knows where to move after getting stuck frankly. SLSQP* is surprisingly decent on F22, F24, and F25, but it does not solve any of them. Also it is very bad on F24 BBOB-2009. 
+
+- BIPOP-aCMAES: inferior to SLSQP* on the composites, but vastly better than any of these algorithms on F24 BBOB-2009.
 
 Not much can be said about F21, F23, F26, F27, F29, and F30. 
 
 They can be solvable or non-solvable. More likely unsolvable in D=20.
 
-A month later:
+**A month later:**
 
-Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts. 
+Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts. It also gets into 2600. 
 
 However, restarts with tiny budgets are detrimental on F25 in D=10:
 
@@ -493,7 +520,7 @@ However, restarts with tiny budgets are detrimental on F25 in D=10:
 |        ARRDE: 50x20M seeds 0..49        | 2600 |
 | ARRDE: popsize = 50 50x20M seeds 0..49  | 2600 |
 
-I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements.
+I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements, like j2020, but frankly I do not know how to improve it, while j21 with all that LSHADE revamping is not it. ARRDE is also complex and overtuned.
 
 ## Vicinity of the Global Minimum
 
@@ -647,21 +674,17 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 ### Some Further Research on CEC-2017 Composites
 
-- To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set.
+- To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set. Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
-- Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
+- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. Minion's implementation is ~3x slower to execute than the original. j2020 is a very solid idea, keep a large population and 7x smaller population running 7x longer. The latter acts like a local optimizer, but this is better than doing restarts. Crowding replaces similar offspring with offspring rather than always replacing parents with offspring which copes better with the population collapse. These two techniques lead to a much better algorithm than jSO. The j2020 paper has such a beautiful pseudocode with the right level of granularity. The problem is, it performs worse than ARRDE, and I did not experience a miracle with j2020 at 2B evals (nor with jDE100 which did occur for the authors in CEC-2019). j2020 could be a nice platform for further improvements, or not.
 
-- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. It is ~3x slower to execute than ARRDE due to the j2020 crowding relying on distance computation, but j2020 is a lot simpler than ARRDE.
+- AGSK solved F24 CEC-2017 D=15 as well, IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. These are LSHADE derivatives more or less, and this lineage of DEs is very crowded and inferior to their present leader - the ARRDE.
 
-- AGSK solved F24 CEC-2017 D=15 as well.
+- ARRDE also solves F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals). 
 
-- IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not.
+- ARRDE with popsize=50 and restartsx20M also solves F28 CEC-2017 D=20.
 
-- ARRDE also solved F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals). 
-
-- ARRDE with popsize=50 and restartsx20M also solved F28 CEC-2017 D=20.
-
-There are more DEs (esp. the ones created in 2021-2026) solving some of these composites.
+There are probably way more DEs (esp. the ones created in 2021-2026) solving some of these composites, but it is hard to locate something better than ARRDE.
 
 There is no separate CEC-2018 benchmark. This was literally the same problem set as CEC-2017 (for single objective bound constrained competition). Also:
 
@@ -692,31 +715,15 @@ References:
 
 - Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but this gets convoluted with recursivity. **The auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
 
-- DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
+- Mopdern DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
 
-- DEs are very powerful on tough cases in D<=10. They bring some pragmatic creativity (no bourbakisms), but the wall with D=20 is looming there.
+- Modern DEs are very powerful on tough cases in D<=10. They bring some pragmatic creativity (no bourbakisms), but the wall with D=20 is looming there.
 
-- CMAES and BIPOP-aCMAES occupy a niche for easier costs in 10 < D < 100 with small eval budgets on the Bayesian Optimization side of things. Little interesting came from CMAES hybrids with DEs.
+- CMAES and BIPOP-aCMAES occupy a niche for easier costs in 10 < D < 100 with small eval budgets on the Bayesian side. Little interesting came from CMAES hybrids with DEs, RL, surrogates.
 
-- Strive not to mix variables of different nature and scale, this complicates DFO enormously and nothing really works beyond D=10. Notice that CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
+- LBFGS and SLSQP are also relevant and can be more effective than BIPOP-aCMAES on these composites. They need more than restarts. Tunneling/filling ideas get us somewhere; a lot more research could be done in this space. 
 
-## Farewell to Matrices: [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367)
+- Strive not to mix variables of different nature and scale. This complicates DFO enormously and nothing really works beyond D=10. CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
 
-- M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
-- J. Bernussou and J. Geromel (1981) An easy way to find gradient matrix of composite matricial functions
 
-- [CMAES 1996 - 2014](https://cma-es.github.io/)
-
-- Aurore Blelly et al. (2018) [Stopping Criteria, Initialization, and Implementations of
-  BFGS and their Effect on the BBOB Test Suite](https://inria.hal.science/hal-01811588/file/workshop_paper-authorversion.pdf)
-
-- Nikolaus Hansen (2019) [A Global Surrogate Assisted CMA-ES](https://inria.hal.science/hal-02143961v1/document), [pycma (github)](https://github.com/CMA-ES/pycma), [pycma Issue 356](https://github.com/CMA-ES/pycma/issues/356)
-
-- Nikolaus Hansen at al. (2019) [Real-Parameter Black-Box Optimization Benchmarking 2009: Noiseless Functions Definitions](https://inria.hal.science/inria-00362633v2/document)
-
-- Zachary Hoffman and Steve Huntsman (2022) [Benchmarking an algorithm for expensive high-dimensional
-  objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
-
-- Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
-  Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)
