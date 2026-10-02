@@ -851,4 +851,5 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 ...
 ```
 
-## TBC...
+No need to despair. Let me remind you where we have started: (mu, lambda)-ES solves this problem. No matrices, no BIPOP/NIPOP/NBIPOP active something grid searches needed.
+
