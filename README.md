@@ -308,7 +308,7 @@ Scroll down for more benchmarking on CEC-2017.
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-Some more papers I have been scrutinizing related to CMAES and matrices: 
+Some more papers I have been scrutinizing related to CMAES and matrices:
 
 - M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
@@ -327,7 +327,7 @@ Some more papers I have been scrutinizing related to CMAES and matrices:
   objectives on the BBOB and BBOB-largescale testbeds](https://hal.science/hal-03665291v1/file/GECCOarXiv2022.pdf)
 
 - Eryk Warchulski and Jarosław Arabas (2024) [Alternative Step-Size Adaptation Rule for the Matrix Adaptation
-  Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)  
+  Evolution Strategy](https://pdfs.semanticscholar.org/c156/492ae2d25a148c19a3043836693d0ebaeea4.pdf)
 
 See also [356](https://github.com/CMA-ES/pycma/issues/356), [367](https://github.com/CMA-ES/pycma/discussions/367).
 
@@ -491,34 +491,34 @@ D=20, seed=20260829, 200M evals.
 | :---: | :----------: | ---: | ---: | ---: | ---: |
 |   1   |      R6      | 2251 | 2438 | 2600 | 2804 |
 |   2   |    ARRDE     | 2243 | 2400 | 2899 | 3000 |
-|   3   |    SLSQP*    | 2300 | 2500 | 2600 | 3100 | 
+|   3   |   SLSQP\*    | 2300 | 2500 | 2600 | 3100 |
 |   4   | BIPOP-aCMAES | 2300 | 2800 | 2910 | 3100 |
 
 - R6 (my own ARRDE mod): solves F22, F24, F28, also F25 in D=10 (but not in D=20).
 
-- ARRDE: solves F22 and F24, also F25 in D=10 (but not in D=20). 
+- ARRDE: solves F22 and F24, also F25 in D=10 (but not in D=20).
 
-- SLSQP*: my own improvement over scipy SLSQP. Local minima are collected into the list of "poles" (300), 
-each of radius 3.0 during the optimization. When SLSQP gets stuck, it restarts anew with the previous local minimum added as a pole/constraint to avoid that minimum. Sort of tunneling/filling. A new starting point is the maximization endpoint reflected away from the nearest pole, to avoid dealing with extra parameters. Maximization follows minimization in an alternating manner to escape local minima. It is likely not to be essential, I believe j2020 or jDE100 used this and dropped it, nobody knows where to move after getting stuck frankly. SLSQP* is surprisingly decent on F22, F24, and F25, but it does not solve any of them. Also it is very bad on F24 BBOB-2009. 
+- SLSQP*: my own improvement over scipy SLSQP. Local minima are collected into the list of "poles" (300),
+  each of radius 3.0 during the optimization. When SLSQP gets stuck, it restarts anew with the previous local minimum added as a pole/constraint to avoid that minimum. Sort of tunneling/filling. A new starting point is the maximization endpoint reflected away from the nearest pole, to avoid dealing with extra parameters. Maximization follows minimization in an alternating manner to escape local minima. It is likely not to be essential, I believe j2020 or jDE100 used this and dropped it, nobody knows where to move after getting stuck frankly. SLSQP* is surprisingly decent on F22, F24, and F25, but it does not solve any of them. Also it is very bad on F24 BBOB-2009.
 
-- BIPOP-aCMAES: inferior to SLSQP* on the composites, but vastly better than any of these algorithms on F24 BBOB-2009.
+- BIPOP-aCMAES: inferior to SLSQP\* on the composites, but vastly better than any of these algorithms on F24 BBOB-2009.
 
-Not much can be said about F21, F23, F26, F27, F29, and F30. 
+Not much can be said about F21, F23, F26, F27, F29, and F30.
 
 They can be solvable or non-solvable. More likely unsolvable in D=20.
 
 **A month later:**
 
-Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts. It also gets into 2600. 
+Vanilla ARRDE also solves F28, but one needs to use tiny popsize=50, and run restarts with 20M eval budget. This mode also solves F24 much faster, 10M eval budget is enough with about 5 restarts. It also gets into 2600.
 
 However, restarts with tiny budgets are detrimental on F25 in D=10:
 
-|                Algorithm                |    f |
-| :-------------------------------------: | ---: |
-|                   R6                    | 2500 |
-|       ARRDE: 200M seed = 20260929       | 2500 |
-|        ARRDE: 50x20M seeds 0..49        | 2600 |
-| ARRDE: popsize = 50 50x20M seeds 0..49  | 2600 |
+|               Algorithm                |    f |
+| :------------------------------------: | ---: |
+|                   R6                   | 2500 |
+|      ARRDE: 200M seed = 20260929       | 2500 |
+|       ARRDE: 50x20M seeds 0..49        | 2600 |
+| ARRDE: popsize = 50 50x20M seeds 0..49 | 2600 |
 
 I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements, like j2020, but frankly I do not know how to improve it, while j21 with all that LSHADE revamping is not it. ARRDE is also complex and overtuned.
 
@@ -680,7 +680,7 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 - AGSK solved F24 CEC-2017 D=15 as well, IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. These are LSHADE derivatives more or less, and this lineage of DEs is very crowded and inferior to their present leader - the ARRDE.
 
-- ARRDE also solves F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals). 
+- ARRDE also solves F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals).
 
 - ARRDE with popsize=50 and restartsx20M also solves F28 CEC-2017 D=20.
 
@@ -713,17 +713,69 @@ References:
 
 ### Further Notes
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but this gets convoluted with recursivity. **The auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters).
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of theory with experiments here, but little interesting ever comes from these waters.
 
 - Mopdern DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
 
-- Modern DEs are very powerful on tough cases in D<=10. They bring some pragmatic creativity (no bourbakisms), but the wall with D=20 is looming there.
-
-- CMAES and BIPOP-aCMAES occupy a niche for easier costs in 10 < D < 100 with small eval budgets on the Bayesian side. Little interesting came from CMAES hybrids with DEs, RL, surrogates.
-
-- LBFGS and SLSQP are also relevant and can be more effective than BIPOP-aCMAES on these composites. They need more than restarts. Tunneling/filling ideas get us somewhere; a lot more research could be done in this space. 
-
 - Strive not to mix variables of different nature and scale. This complicates DFO enormously and nothing really works beyond D=10. CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
 
+### A Few Months later
+
+So modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which in some sense is even harder than F24 CEC-2015 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP maybe a million times already with on a local PC.
+
+```bash
+python restart_slsqp_cec2017.py --function 25 --dim 10 --algo slsqp
+CEC2017 F25  D=10  algo=slsqp  budget=1000000000  maxiter=300
+fopt ≈ 2.500000e+03
+
+evals=    10000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=     470.6s
+evals=    20000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=     924.2s
+evals=    30000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=    1398.9s
+evals=    40000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=    1846.8s
+evals=    50000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=    2292.1s
+evals=    60000000  best_f=2.600005658860e+03  ||xbest||=1.491452e+02  time=    2800.4s
+evals=    70000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    3322.9s
+evals=    80000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    3847.3s
+evals=    90000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    4309.1s
+evals=   100000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    4771.0s
+evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    5220.6s
+```
+
+Bingo. A very tough problem (needle in haystack) is solved, which pretty much covers the whole D=10 space, though one still needs to check F24 BBOB-2009 D=10. No need for ARRDE and Co at all!
+
+So now everything becomes ordered into their specific niche setups. A DE probably only makes sense for D=20, but you need to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017 and still tinker with vanilla ARRDE for it to make sense against restarted SLSQP with box constraints. The latter hits those "next in line" optima easily: f=2500 on F24, f=2900 on F28, so the purpose of DEs is very narrow now. Most of them frankly are no longer needed.
+
+A well-posed problem in D<100 - CMAES, BIPOP-aCMAES, also the ES discussed here. SLSQP/BFGS if it is unimodal.
+
+An ill-conditioned problem in D<=10 - massively restarted SLSQP, no need for DEs anymore.
+
+An ill-conditioned problem in D>10 - maybe ARRDE, but better do not even try.
+
+Notice that the field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources employed for testing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care, and now they lose to restarted SLSQP on "a needle in haystack" problems in D=10, which was nearly the sole purpose and main forte of any modern DE.
+
+### Why SLSQP and Not BFGS/L-BFGS-B
+
+To restart million times, one needs to run very few iterations, i.e. 300. The execution time becomes critical.
+
+SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes in box constraints, exactly what we need as more special is better. Wrong!
+
+My prompt to Grok:
+
+_scipy uses L-BFGS-B for box constraints which is C and very specialized, why is SLSQP 10x faster? Don't write me bullet lists, I know it all, I want a deeper answer, guru to guru._
+
+Grok:
+
+_You’re right — when bounds are supplied SciPy routes to L-BFGS-B, not the pure-Python BFGS. So the comparison that actually matters is L-BFGS-B versus SLSQP on a pure box-constrained problem at D ≈ 10 with a hard iteration ceiling.
+At that scale the asymptotic advantages of limited-memory BFGS disappear. The working set is tiny, the dense 10 × 10 Hessian that SLSQP maintains costs almost nothing to factor, and the dominant costs become the quality of the search direction and the number of gradient evaluations required to make progress._
+
+_L-BFGS-B builds its curvature information from a short history of (s, y) pairs and then solves a bound-constrained quadratic model by a Cauchy-point + primal subspace minimization. The Cauchy point itself is a projected gradient path that is cheap, but the subsequent minimization over the free variables is essentially a dense quasi-Newton step on a reduced space whose dimension fluctuates. Every time a bound becomes active or inactive the history is only partially reusable; the algorithm must re-project and often takes a very short step. With a fixed budget of a few hundred iterations those short or poorly scaled steps accumulate. The line-search (More–Thuente) is also conservative because the limited-memory Hessian can be a rather crude approximation early on, so many iterations end up doing only a fraction of the full Newton step.
+SLSQP, by contrast, maintains a full dense BFGS approximation to the Hessian of the Lagrangian and, at every major iteration, solves the exact bound-constrained QP_
+
+min ½ dᵀ B d + gᵀ d s.t. xl – x ≤ d ≤ xu – x
+
+_with the classical Lawson–Hanson NNLS active-set method. Because the dimension is only 10, NNLS finishes in a handful of pivots and returns a direction that already satisfies the linearized bounds to machine precision. The subsequent line-search therefore starts from a point that is feasible with respect to the model and almost always accepts a step close to unity. The BFGS update that follows is the ordinary dense update (Powell damping when necessary), so the curvature information stays consistent across iterations. In practice this produces a sequence of almost full Newton steps that stay inside the box, which is why the same progress that costs L-BFGS-B 200–300 iterations is often achieved by SLSQP in 20–40 iterations._
+
+_There is also a constant-factor implementation difference that becomes visible at low dimension. L-BFGS-B’s Fortran core is heavily optimized for the high-dimensional regime (many free variables, long history vectors, BLAS-2/3 operations). When the free set is small those kernels have poor arithmetic intensity and the overhead of the reverse-communication interface and the projected-gradient machinery shows up. SLSQP’s inner loop, although older, is essentially a dense linear-algebra kernel of size 10; modern compilers turn it into tight code that sits in L1, and the Python driver around it does almost no work once the first gradient has been evaluated.
+So the 10× wall-clock gap is not mysterious: at D = 10 the limited-memory approximation and the Cauchy-point strategy of L-BFGS-B become liabilities rather than assets, while SLSQP is simply running a full-space SQP iteration whose linear algebra is trivial and whose steps are almost always accepted. Raise the dimension to a few hundred and the ranking reverses, exactly as one would expect._
 
 
