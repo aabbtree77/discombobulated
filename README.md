@@ -721,7 +721,7 @@ References:
 
 ### A Few Months later
 
-So modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which in some sense is even harder than F24 CEC-2015 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP maybe a million times already with on a local PC.
+Modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which in some sense is even harder than F24 CEC-2015 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP maybe a million times already on a local PC!
 
 ```bash
 python restart_slsqp_cec2017.py --function 25 --dim 10 --algo slsqp
@@ -741,23 +741,29 @@ evals=   100000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    
 evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    5220.6s
 ```
 
-Bingo. A very tough problem (needle in haystack) is solved, which pretty much covers the whole D=10 space, though one still needs to check F24 BBOB-2009 D=10. No need for ARRDE and Co at all!
+Bingo. A tough problem (a needle in haystack) is solved. One still needs to check F24 BBOB-2009 D=10. 
 
-So now everything becomes ordered into their specific niche setups. A DE probably only makes sense for D=20, but you need to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017 and still tinker with vanilla ARRDE for it to make sense against restarted SLSQP with box constraints. The latter hits those "next in line" optima easily: f=2500 on F24, f=2900 on F28, so the purpose of DEs is very narrow now. Most of them frankly are no longer needed.
+So now everything becomes ordered into their specific niche setups. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE. 
 
-A well-posed problem in D<100 - CMAES, BIPOP-aCMAES, also the ES discussed here. SLSQP/BFGS if it is unimodal.
+A restarted SLSQP with box constraints is not at the global optimum in D=20, but it hits those "next in line" optima easily in 10..30M evals: f=2500 on F24, f=2900 on F28. This is better than BIPOP-aCMAES, and is just like any modern DE, if not better.
 
-An ill-conditioned problem in D<=10 - massively restarted SLSQP, no need for DEs anymore.
+- A well-posed problem in D<100: (mu, lambda)-ES, CMAES, BIPOP-aCMAES. SLSQP/BFGS if it is unimodal.
 
-An ill-conditioned problem in D>10 - maybe ARRDE, but better do not even try.
+- An ill-conditioned problem up to D=10: massively restarted SLSQP, no need for ARRDE or any DE anymore.
 
-Notice that the field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources employed for testing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care, and now they lose to restarted SLSQP on "a needle in haystack" problems in D=10, which was nearly the sole purpose and main forte of any modern DE.
+- An ill-conditioned problem in D>10: ARRDE (maybe), better avoid entirely.
+
+Why avoiding? The field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources advancing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant outside the CEC contests. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care.
+
+Now both of them lose to restarted SLSQP on "a needle in haystack" problems in D=10, which is nearly the sole purpose and main forte of any modern DE.
 
 ### Why SLSQP and Not BFGS/L-BFGS-B
 
-To restart million times, one needs to run very few iterations, i.e. 300. The execution time becomes critical.
+To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This was used by Niklaus Hansen in his 2019 report on the CMAES with surrogates. 
 
-SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes in box constraints, exactly what we need as more special is better. Wrong!
+The execution time becomes critical.
+
+SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes with box constraints, which is exactly what we need. A more special algorithm will be better. Wrong! BFGS is 10x slower here.
 
 My prompt to Grok:
 
@@ -778,4 +784,8 @@ _with the classical Lawson–Hanson NNLS active-set method. Because the dimensio
 _There is also a constant-factor implementation difference that becomes visible at low dimension. L-BFGS-B’s Fortran core is heavily optimized for the high-dimensional regime (many free variables, long history vectors, BLAS-2/3 operations). When the free set is small those kernels have poor arithmetic intensity and the overhead of the reverse-communication interface and the projected-gradient machinery shows up. SLSQP’s inner loop, although older, is essentially a dense linear-algebra kernel of size 10; modern compilers turn it into tight code that sits in L1, and the Python driver around it does almost no work once the first gradient has been evaluated.
 So the 10× wall-clock gap is not mysterious: at D = 10 the limited-memory approximation and the Cauchy-point strategy of L-BFGS-B become liabilities rather than assets, while SLSQP is simply running a full-space SQP iteration whose linear algebra is trivial and whose steps are almost always accepted. Raise the dimension to a few hundred and the ranking reverses, exactly as one would expect._
 
+Key references:
 
+[scipy SLSQP](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html)
+
+Kraft D (1988) [https://yetanothermathprogrammingconsultant.blogspot.com/2022/02/slsqp-original-paper.html](A software package for sequential quadratic programming. Tech. Rep. DFVLR-FB 88-28, DLR German Aerospace Center — Institute for Flight Mechanics, Koln, Germany)
