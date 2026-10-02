@@ -520,7 +520,7 @@ However, restarts with tiny budgets are detrimental on F25 in D=10:
 |       ARRDE: 50x20M seeds 0..49        | 2600 |
 | ARRDE: popsize = 50 50x20M seeds 0..49 | 2600 |
 
-I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements, like j2020, but frankly I do not know how to improve it, while j21 with all that LSHADE revamping is not it. ARRDE is also complex and overtuned.
+I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=10, also ~5x faster in real time for >1B evals, but this is not important. It is better to select a simpler algorithm than ARRDE as a base for improvements, like j2020. ARRDE is rather complex and overtuned/maxed-out.
 
 ## Vicinity of the Global Minimum
 
@@ -676,23 +676,27 @@ Unless one places a bounty in the Indian market. Who knows how many Ramanujans a
 
 - To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set. Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
-- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. Minion's implementation is ~3x slower to execute than the original. j2020 is a very solid idea, keep a large population and 7x smaller population running 7x longer. The latter acts like a local optimizer, but this is better than doing restarts. Crowding replaces similar offspring with offspring rather than always replacing parents with offspring which copes better with the population collapse. These two techniques lead to a much better algorithm than jSO. The j2020 paper has such a beautiful pseudocode with the right level of granularity. The problem is, it performs worse than ARRDE, and I did not experience a miracle with j2020 at 2B evals (nor with jDE100 which did occur for the authors in CEC-2019). j2020 could be a nice platform for further improvements, or not.
+- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. Minion's implementation is ~3x slower to execute than the original. j2020 is a very solid idea, keep a large population and 7x smaller population running 7x longer. The latter acts like a local optimizer. Crowding replaces similar offspring with offspring rather than parents with offspring, acts better against the population collapse. These two techniques lead to a much better algorithm than jSO. 
 
-- AGSK solved F24 CEC-2017 D=15 as well, IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. These are LSHADE derivatives more or less, and this lineage of DEs is very crowded and inferior to their present leader - the ARRDE.
+- j2020's pseudocode is the prettiest I have seen, with the right level of granularity. 
 
-- ARRDE also solves F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals).
+- Sadly, j2020 performs worse than ARRDE, and I did not experience a miracle with j2020 at 2B evals (nor with jDE100 which did occur for the authors in CEC-2019).
+
+- AGSK solved F24 CEC-2017 D=15 as well, IMODE also solved F24 CEC-2017 D=20. NL-SHADE-RSP later did too. EBOwithCMAR, HSES, LSHADE-cnEpSin, and LSHADE-SPACMA did not. These are LSHADE derivatives, more or less.
+
+- ARRDE is a derivative too, but it also solves F25 CEC-2017 D=10 (e.g. seed=20260929, 200M evals).
 
 - ARRDE with popsize=50 and restartsx20M also solves F28 CEC-2017 D=20.
 
-There are probably way more DEs (esp. the ones created in 2021-2026) solving some of these composites, but it is hard to locate something better than ARRDE.
+There is no separate CEC-2018 benchmark. CEC-2017 was carried over (for single objective bound constrained competition). 
 
-There is no separate CEC-2018 benchmark. This was literally the same problem set as CEC-2017 (for single objective bound constrained competition). Also:
+Also:
 
 - F22 CEC-2017 = F8 CEC-2020 = F8 CEC-2021 (shift+bias+rotation)
 - F24 CEC-2017 = F9 CEC-2020 = F9 CEC-2021 (shift+bias+rotation)
 - F25 CEC-2017 = F10 CEC-2020 = F10 CEC-2021 (shift+bias+rotation)
 
-CEC-2022 tried to be "unique", but CEC-2017 has returned (carried over in full) to CEC-2023..CEC-2026 competitions in the bound constrained single function track.
+CEC-2022 tried to be "unique", but CEC-2017 has returned (carried over) to CEC-2023..CEC-2026 competitions in the bound constrained single function track.
 
 References:
 
@@ -713,7 +717,7 @@ References:
 
 ## Further Notes
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of theory with experiments here, but little interesting ever comes from these waters.
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of theory with experiments here, but little interesting ever comes from these big generic frameworks.
 
 - Mopdern DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
 
@@ -721,7 +725,7 @@ References:
 
 ## A Few Months Later
 
-Modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which, in some sense, is even harder than F24 CEC-2017 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP meaningfully a million times already on a local PC!
+Modern DEs are impressive in D=10, e.g. ARRDE solves the F25 CEC-2017 which, in some sense, is even harder than the F24 CEC-2017 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP meaningfully a million times already on a local PC!
 
 ```bash
 python restart_slsqp_cec2017.py --function 25 --dim 10 --algo slsqp
@@ -745,7 +749,7 @@ Bingo. A needle in a haystack is a solved problem in D=10.
 
 So now everything becomes ordered into their specific niche domains. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE to make it solve these two cases.
 
-A restarted SLSQP with box constraints is not at the global optimum in D=20, but it hits those "next in line" optima in 10..30M evals: f=2500 on F24, f=2900 on F28. This is better than BIPOP-aCMAES, and is just like any modern DE, if not better.
+A massively restarted SLSQP with box constraints may not reach the global optima in D=20 under 1B evals, but it hits those "next in line" optima in just 10..30M evals: f=2500 on F24, f=2600 on F25, f=2900 on F28. This is much better than BIPOP-aCMAES and sometimes even better than ARRDE.
 
 - A well-posed problem in D<100: (mu, lambda)-ES, CMAES, BIPOP-aCMAES. SLSQP/BFGS if it is unimodal.
 
@@ -753,15 +757,15 @@ A restarted SLSQP with box constraints is not at the global optimum in D=20, but
 
 - An ill-conditioned problem in D>10: ARRDE (maybe), better avoid it entirely.
 
-Why avoiding? The field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources advancing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant outside the CEC contests. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care. The algorithms are complex (j2020 already has 16 parameters), overtuned, and hit the wall at D=20. We have restarted SLSQP in D=10, and nothing to tune.
+Why avoiding? The field of DEs is now over 30 years old, the algorithms become complex and overtuned, but the performance saturates and hits the wall around D=20. In D=10, however, a restarted SLSQP works fine or even better than ARRDE, and there is little to tune, not to mention an embarrassing parallelism.
 
 ## Why SLSQP and Not BFGS/L-BFGS-B
 
-To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates. Why?
+To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates as well.
 
-When restarting, the execution time becomes critical.
+SLSQP is a general algorithm which handles all sorts of constraints, while L-BFGS-B specializes to the box constraints only, which is exactly what we need here. A more special algorithm will be better. 
 
-SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes with box constraints, which is exactly what we need. A more special algorithm will be better. Wrong! BFGS turns out to run 10x slower here.
+Wrong! BFGS turns out to run 10x slower than SLSQP in this D=10 and small iteration numbers mode.
 
 My prompt to Grok:
 
@@ -790,7 +794,9 @@ Kraft D (1988) [A software package for sequential quadratic programming. Tech. R
 
 ## What If the Problem Is Not a Needle in a Haystack?
 
-Well-posed problems are solvable in D=10, but restarting SLSQP is not particularly efficient (DEs are horrid too):
+Well-posed problems such as the F24 BBOB-2009 are a lot harder to solve :).
+
+Still solvable in D=10, but restarting SLSQP is not particularly efficient. Roughly 1000x worse than (mu,lambda)-ES or BIPOP-aCMAES in evals. ARRDE is horrid here too.
 
 ```bash
 python restart_slsqp_bbob2009.py --function 24 --dim 10 --algo slsqp
