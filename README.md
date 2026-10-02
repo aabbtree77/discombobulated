@@ -788,4 +788,4 @@ Key references:
 
 [scipy SLSQP](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html)
 
-Kraft D (1988) [https://yetanothermathprogrammingconsultant.blogspot.com/2022/02/slsqp-original-paper.html](A software package for sequential quadratic programming. Tech. Rep. DFVLR-FB 88-28, DLR German Aerospace Center — Institute for Flight Mechanics, Koln, Germany)
+Kraft D (1988) [A software package for sequential quadratic programming. Tech. Rep. DFVLR-FB 88-28, DLR German Aerospace Center, Institute for Flight Mechanics, Koln, Germany](https://yetanothermathprogrammingconsultant.blogspot.com/2022/02/slsqp-original-paper.html)
