@@ -524,7 +524,7 @@ I put R6 on hold for now. It can be 10x faster than ARRDE in evals on F25 in D=1
 
 ## Vicinity of the Global Minimum
 
-F25 CEC-2017 in D=20 is a needle in haystack.
+F25 CEC-2017 in D=20 is a needle in a haystack.
 
 The box is [-100, 100]^20.
 
@@ -672,7 +672,7 @@ I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decad
 
 Unless one places a bounty in the Indian market. Who knows how many Ramanujans are there.
 
-### Some Further Research on CEC-2017 Composites
+## Some Further Research on CEC-2017 Composites
 
 - To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set. Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
@@ -711,7 +711,7 @@ References:
 
 - Khoirul Faiq Muzakka, Ahsani Hafizhu Shali, Haris Suhendar, Sören Möller, Martin Finsterbusch (2026) [Robust Differential Evolution via Nonlinear Population Size Reduction and Adaptive Restart: The ARRDE Algorithm](https://arxiv.org/abs/2511.18429v4), [Minion (github)](https://github.com/khoirulmuzakka/Minion), [Minion Issue 11](https://github.com/khoirulmuzakka/Minion/issues/11), [algolist](https://minion-py.readthedocs.io/en/latest/algolist.html)
 
-### Further Notes
+## Further Notes
 
 - Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of theory with experiments here, but little interesting ever comes from these waters.
 
@@ -719,7 +719,7 @@ References:
 
 - Strive not to mix variables of different nature and scale. This complicates DFO enormously and nothing really works beyond D=10. CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
 
-### A Few Months Later
+## A Few Months Later
 
 Modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which, in some sense, is even harder than F24 CEC-2017 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP meaningfully a million times already on a local PC!
 
@@ -741,7 +741,7 @@ evals=   100000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    
 evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    5220.6s
 ```
 
-Bingo. A needle in haystack is a solved problem in D=10.
+Bingo. A needle in a haystack is a solved problem in D=10.
 
 So now everything becomes ordered into their specific niche domains. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE to make it solve these two cases.
 
@@ -755,7 +755,7 @@ A restarted SLSQP with box constraints is not at the global optimum in D=20, but
 
 Why avoiding? The field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources advancing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant outside the CEC contests. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care. The algorithms are complex (j2020 already has 16 parameters), overtuned, and hit the wall at D=20. We have restarted SLSQP in D=10, and nothing to tune.
 
-### Why SLSQP and Not BFGS/L-BFGS-B
+## Why SLSQP and Not BFGS/L-BFGS-B
 
 To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates. Why?
 
@@ -787,3 +787,62 @@ Key references:
 [scipy SLSQP](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html)
 
 Kraft D (1988) [A software package for sequential quadratic programming. Tech. Rep. DFVLR-FB 88-28, DLR German Aerospace Center, Institute for Flight Mechanics, Koln, Germany](https://yetanothermathprogrammingconsultant.blogspot.com/2022/02/slsqp-original-paper.html)
+
+## What If the Problem Is Not a Needle in a Haystack?
+
+Well-posed problems are solvable in D=10, but restarting SLSQP is not particularly efficient (DEs are horrid too):
+
+```bash
+python restart_slsqp_bbob2009.py --function 24 --dim 10 --algo slsqp
+BBOB2009 F24  D=10  algo=slsqp  budget=1000000000  maxiter=300
+bounds = [-5.0, 5.0]  f_opt ≈ 1.026100e+02
+
+evals=     1000000  best_f=1.437141941419e+02  ||xbest||=5.515729e+00  time=      41.3s
+evals=     2000000  best_f=1.386803970690e+02  ||xbest||=5.548303e+00  time=      82.0s
+evals=     3000000  best_f=1.386803970690e+02  ||xbest||=5.548303e+00  time=     122.2s
+evals=     4000000  best_f=1.260663556871e+02  ||xbest||=4.051172e+00  time=     162.2s
+...
+evals=    20000000  best_f=1.260663556871e+02  ||xbest||=4.051172e+00  time=     805.0s
+evals=    21000000  best_f=1.259831320350e+02  ||xbest||=4.498224e+00  time=     845.1s
+evals=    22000000  best_f=1.259831320350e+02  ||xbest||=4.498224e+00  time=     885.2s
+...
+evals=    69000000  best_f=1.259831320350e+02  ||xbest||=4.498224e+00  time=    3017.6s
+evals=    70000000  best_f=1.259831320350e+02  ||xbest||=4.498224e+00  time=    3060.9s
+evals=    71000000  best_f=1.202997586851e+02  ||xbest||=4.766962e+00  time=    3103.2s
+evals=    72000000  best_f=1.202997586851e+02  ||xbest||=4.766962e+00  time=    3145.5s
+...
+evals=    83000000  best_f=1.202997586851e+02  ||xbest||=4.766962e+00  time=    3608.3s
+evals=    84000000  best_f=1.202997586851e+02  ||xbest||=4.766962e+00  time=    3650.6s
+evals=    85000000  best_f=1.202997586851e+02  ||xbest||=4.766962e+00  time=    3692.7s
+evals=    86000000  best_f=1.198911330556e+02  ||xbest||=4.764386e+00  time=    3735.1s
+evals=    87000000  best_f=1.198911330556e+02  ||xbest||=4.764386e+00  time=    3780.5s
+...
+evals=   285000000  best_f=1.198911330556e+02  ||xbest||=4.764386e+00  time=   11899.2s
+evals=   286000000  best_f=1.198911330556e+02  ||xbest||=4.764386e+00  time=   11942.3s
+evals=   287000000  best_f=1.158045228968e+02  ||xbest||=3.521697e+00  time=   11985.9s
+evals=   288000000  best_f=1.158045228968e+02  ||xbest||=3.521697e+00  time=   12027.6s
+...
+evals=   374000000  best_f=1.158045228968e+02  ||xbest||=3.521697e+00  time=   15581.8s
+evals=   375000000  best_f=1.158045228968e+02  ||xbest||=3.521697e+00  time=   15623.6s
+...
+```
+
+In D=20, restarting is no longer functional:
+
+```bash
+python restart_slsqp_bbob2009.py --function 24 --dim 20 --algo slsqp
+BBOB2009 F24  D=20  algo=slsqp  budget=1000000000  maxiter=300
+bounds = [-5.0, 5.0]  f_opt ≈ 1.026100e+02
+
+evals=     1000000  best_f=2.880528724905e+02  ||xbest||=8.460504e+00  time=      35.2s
+evals=     2000000  best_f=2.880528724905e+02  ||xbest||=8.460504e+00  time=      70.4s
+evals=     3000000  best_f=2.880528724905e+02  ||xbest||=8.460504e+00  time=     104.7s
+evals=     4000000  best_f=2.880528724905e+02  ||xbest||=8.460504e+00  time=     139.2s
+...
+evals=   438000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   15530.8s
+evals=   439000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   15567.0s
+evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   15602.3s
+...
+```
+
+## TBC...
