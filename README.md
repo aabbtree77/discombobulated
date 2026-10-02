@@ -719,9 +719,9 @@ References:
 
 - Strive not to mix variables of different nature and scale. This complicates DFO enormously and nothing really works beyond D=10. CEC-2017 is only a two-layer mixing and generally non-solvable already in D=20. Nobody knows what to do about unsolvable cases like F25 CEC-2017 D=20. We can complicate this much further and no algorithm will ever catch up.
 
-### A Few Months later
+### A Few Months Later
 
-Modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which in some sense is even harder than F24 CEC-2015 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP maybe a million times already on a local PC!
+Modern DEs are impressive in D=10, e.g. ARRDE solves F25 CEC-2017 which, in some sense, is even harder than F24 CEC-2017 D=20. However, in D=10 a cube has only 1024 vertices, so if we can restart a decent local algorithm 1000x, it already explores a lot of the search domain. But we can restart scipy SLSQP meaningfully a million times already on a local PC!
 
 ```bash
 python restart_slsqp_cec2017.py --function 25 --dim 10 --algo slsqp
@@ -741,29 +741,27 @@ evals=   100000000  best_f=2.600005557724e+03  ||xbest||=1.491450e+02  time=    
 evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    5220.6s
 ```
 
-Bingo. A tough problem (a needle in haystack) is solved. One still needs to check F24 BBOB-2009 D=10. 
+Bingo. A needle in haystack is a solved problem in D=10.
 
-So now everything becomes ordered into their specific niche setups. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE. 
+So now everything becomes ordered into their specific niche domains. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE to make it solve these two cases.
 
-A restarted SLSQP with box constraints is not at the global optimum in D=20, but it hits those "next in line" optima easily in 10..30M evals: f=2500 on F24, f=2900 on F28. This is better than BIPOP-aCMAES, and is just like any modern DE, if not better.
+A restarted SLSQP with box constraints is not at the global optimum in D=20, but it hits those "next in line" optima in 10..30M evals: f=2500 on F24, f=2900 on F28. This is better than BIPOP-aCMAES, and is just like any modern DE, if not better.
 
 - A well-posed problem in D<100: (mu, lambda)-ES, CMAES, BIPOP-aCMAES. SLSQP/BFGS if it is unimodal.
 
 - An ill-conditioned problem up to D=10: massively restarted SLSQP, no need for ARRDE or any DE anymore.
 
-- An ill-conditioned problem in D>10: ARRDE (maybe), better avoid entirely.
+- An ill-conditioned problem in D>10: ARRDE (maybe), better avoid it entirely.
 
-Why avoiding? The field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources advancing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant outside the CEC contests. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care.
-
-Now both of them lose to restarted SLSQP on "a needle in haystack" problems in D=10, which is nearly the sole purpose and main forte of any modern DE.
+Why avoiding? The field of DEs is now over 30 years old. Every year a dozen of new algorithms, but what improves things is mostly computational resources advancing as this is very experiment-driven and MC-alike. So each decade produces better algorithms, but the difference between say j2020 and ARRDE is not that significant outside the CEC contests. ARRDE will solve F24 and F28 in D=20, while j2020 may or may not, but the search power is not too different to care. The algorithms are complex (j2020 already has 16 parameters), overtuned, and hit the wall at D=20. We have restarted SLSQP in D=10, and nothing to tune.
 
 ### Why SLSQP and Not BFGS/L-BFGS-B
 
-To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This was used by Niklaus Hansen in his 2019 report on the CMAES with surrogates. 
+To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates. Why?
 
-The execution time becomes critical.
+When restarting, the execution time becomes critical.
 
-SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes with box constraints, which is exactly what we need. A more special algorithm will be better. Wrong! BFGS is 10x slower here.
+SLSQP is a more general algorithm which handles all sorts of constraints, while L-BFGS-B specializes with box constraints, which is exactly what we need. A more special algorithm will be better. Wrong! BFGS turns out to run 10x slower here.
 
 My prompt to Grok:
 
