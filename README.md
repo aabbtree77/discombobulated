@@ -274,9 +274,9 @@ A preliminary view:
 
 - ES: wipes the floor with Newton/Powell on Rastrigin-like multimodals. Outstanding only with mild condition numbers (up to ~1000, still solves F18 BBOB-2009). It is sensitive w.r.t. starting points, but this is nothing serious.
 
-- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. Face-plants on F25 CEC-2017 already in D=10.
+- BIPOP-aCMAES (pycma CMAES), used to be the best, fails on F21 - F30 CEC-2017 when there is no single coordinate system to rescale-unrotate. Face-plants on F25 CEC-2017 already in D=10. Often gets stuck with a premature convergence due to an exponentially decreasing step size, lacks mechanisms to escape and continue, relies on dumb restarts with increasing population size. The search is ES in an adapted coordinate system, which is much worse than any modern DE which uses only population vector differences, decreasing population sizes, more self-observation and adaptation with archives, more sophisticated off-spring generation/replacements than (mu, lambda). 
 
-- ARRDE: completely solves F24 CEC-2017 (in D=20), yet cannot nail F25 CEC-2017 (in D=20, but D=10 is already difficult, requires tinkering, vanilla setup won't do). Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than CMAES. ARRDE is the best DE in my experience.
+- ARRDE: completely solves F24 CEC-2017 (in D=20), yet cannot nail F25 CEC-2017 in D=20 (solves it in D=10). Notably, ARRDE sustains ill-conditioning without matrices, and does it much better than BIPOP-aCMAES. ARRDE is the best DE in my experience.
 
 Scroll down for more benchmarking on CEC-2017.
 
@@ -284,7 +284,7 @@ Scroll down for more benchmarking on CEC-2017.
 
 - DEs lose their quality w.r.t. increasing D beyond 10, try F24 BBOB-2009 in D=40 which is solvable by ES.
 
-- ES/CMAES are much worse at ill-conditioning than DEs, try F24 CEC-2017 in D=20, or F25 CEC-2017 in D=10, both solvable by R6 (see below).
+- ES/CMAES are much worse at ill-conditioning than DEs, try F24 CEC-2017 in D=20, or F25 CEC-2017 in D=10, both solvable by ARRDE/R6 (see below).
 
 - Nothing solves F25 CEC-2017 in D=20.
 
@@ -379,13 +379,13 @@ ARRDE adds (to the jSO algorithm) global phases with some intricate refinement m
 
 Decent up to D=10, afterwards every problem becomes a special case. Might work spectacularly (F24 CEC-2017 D=20), but may also lead to nowhere (F25 CEC-2017 D=20). Generally very bad with increasing D>10 as the experiments with F24 BBOB-2009 for D=10, 20,40, 100 would show.
 
-Code execution slows down superlinearly w.r.t. increasing number of evals.
+Minion's ARRDE C++ code execution slows down superlinearly w.r.t. increasing number of evals, becomes ~2x slower beyond 500M evals.
 
 ## CEC-2017 Composites
 
 CEC-2017 was a step forward compared to CEC-2014 and BBOB-2009. It added multiple ill-conditioned matrices and revealed the simplest problems not amenable to any modern technology to date (2026). They rule out any existing ES and DE.
 
-The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20 without being prepared to spend years going nowhere. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail on the composites in D>10, with an exception of ARRDE in a few cases.
+The composites F21-F30 are the hardest cost functions of the benchmark. Do not run anything on F25 in D=20, better wait for the next generation PCs or utilize server resources if there is such a possibility. All the algorithms of [Minion](https://github.com/khoirulmuzakka/Minion) fail on the composites in D>10, with some rare exceptions.
 
 What are these challenges?
 
@@ -669,8 +669,6 @@ For F25 in D=10, the pessimistic radius is 2.5, while the one from ARRDE runs is
 
 In any case, this should suffice to get a rough picture of how problems F24 and F25 differ in dimensions 10 and 20, why F24 is solvable in D=20 and why F25 is already shaky in D=10 (shaky = none of the CEC-2020 contestants solved it).
 
-I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
-
 ## Some Further Research on CEC-2017 Composites
 
 - To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set. Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
@@ -746,7 +744,7 @@ evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    
 
 Bingo. A needle in a haystack is a solved problem in D=10.
 
-This massively restarted SLSQP with box constraints may no longer reach global optima in D=20 under 1B evals. It hits those "next in line" suboptimal points in just 10..30M evals: f=2500 on F24, f=2900 on F28. f=2600 on F25 demands 150M evals. This is much better than BIPOP-aCMAES and sometimes even better than ARRDE.
+In D=20, this massively restarted SLSQP with box constraints may no longer reach global optima under 1B evals. It hits those "next in line" suboptimal points in just 10..30M evals: f=2500 on F24, f=2900 on F28. f=2600 on F25 demands 150M evals. This is vastly better than BIPOP-aCMAES and sometimes even better than ARRDE.
 
 ## Why SLSQP and Not BFGS/L-BFGS-B
 
@@ -850,5 +848,11 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 
 - Multimodal + ill-conditioned, D<=10: massively restarted SLSQP, no tuning, no parameters.
 
-- Multimodal + ill-conditioned, D>10: ARRDE, or avoid it entirely (generally non-solvable).
+- Multimodal + ill-conditioned, D=20: massively restarted SLSQP on a server, ARRDE in some cases.
 
+- Multimodal + ill-conditioned, D=30: avoid it entirely (non-solvable at the moment).
+
+## Hypothesis
+
+In D=10, the number of restarts required by SLSQP to solve any problem is 100 x cube corners, i.e. O(1e5).
+Does this extend to any D? If yes, this practically rules out all the modern DEs. In D=20, we would need O(1e8) restarts. I wish I had INRIA PACA Grid available. 
