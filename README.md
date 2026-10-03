@@ -844,11 +844,11 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 
 - Unimodal + ill-conditioned: SLSQP/BFGS.
 
-- Multimodal + well-conditioned, D < 100: (mu, lambda)-ES.
+- Multimodal + well-conditioned, D<100: (mu, lambda)-ES.
 
 - Multimodal + ill-conditioned with a single matrix, D<100: BIPOP-aCMAES.
 
-- Multimodal + ill-conditioned, D <= 10: massively restarted SLSQP, no tuning, no parameters.
+- Multimodal + ill-conditioned, D<=10: massively restarted SLSQP, no tuning, no parameters.
 
-- Multimodal + ill-conditioned, D > 10: ARRDE, or avoid it entirely (generally non-solvable).
+- Multimodal + ill-conditioned, D>10: ARRDE, or avoid it entirely (generally non-solvable).
 
