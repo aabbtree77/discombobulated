@@ -1,11 +1,14 @@
 > Three wise men from freezing North<br>
 > Keep telling me and holding forth<br>
 > The metal will not bring a yield<br>
-> The game's not worth the candle, nor the labor's field<br> > <br>
+> The game's not worth the candle, nor the labor's field<br> 
+> <br>
 > But I am planting my aluminium cucumbers, ah-ah<br>
 > Right on a tarpaulin field<br>
 > Yes I am planting my aluminium cucumbers, ah-ah<br>
-> Right on a tarpaulin field<br> > <br> > [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
+> Right on a tarpaulin field<br> 
+> <br> 
+> [\- AI-MUSIC KANYE WEST ft. ВИКТОР ЦОЙ - ALUMINIUM CUCUMBERS](https://www.youtube.com/watch?v=980EpMVJ6Pg&list=RD980EpMVJ6Pg&start_radio=1)
 
 <br>
 
@@ -15,9 +18,9 @@
   <img src="bbob2009vscec2017.png" alt="bbob2009 vs cec2017 as Venn diagrams with ill-cond vs multimodality" style="width: 90%; height: auto;" />
 </p>
 
-## Do we need complex modern optimization algorithms?
+## Do We Need Complex Modern Optimization Algorithms?
 
-The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning, stiffness), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
+The "CMA" part in "CMAES" solves badly scaled non-separable cost functions (ill-conditioning = stiffness), see e.g. [Issue 356](https://github.com/CMA-ES/pycma/issues/356). However, if one's variables are proper, the ES part is literally this code:
 
 ```python
 import numpy as np
@@ -308,7 +311,7 @@ Scroll down for more benchmarking on CEC-2017.
 
   See pycma's [Issue 356](https://github.com/CMA-ES/pycma/issues/356) for some of it in action, also consider adjusting the CSA according to pycma [Issue 231](https://github.com/CMA-ES/pycma/issues/231).
 
-Some more papers I have been scrutinizing related to CMAES and matrices:
+Some more papers related to CMAES and matrices:
 
 - M.J. Box (1966) A Comparison of Several Current Optimization Methods, and the use of Transformations in Constrained Problems
 
@@ -503,9 +506,7 @@ D=20, seed=20260829, 200M evals.
 
 - BIPOP-aCMAES: inferior to SLSQP\* on the composites, but vastly better than any of these algorithms on F24 BBOB-2009.
 
-Not much can be said about F21, F23, F26, F27, F29, and F30.
-
-They can be solvable or non-solvable. More likely unsolvable in D=20.
+Not much can be said about F21, F23, F26, F27, F29, and F30. Likely unsolvable already in D=20.
 
 **A month later:**
 
@@ -670,15 +671,13 @@ In any case, this should suffice to get a rough picture of how problems F24 and 
 
 I predict that no algorithm will solve F25 CEC-2017 in D=20 in the nearest decade, and D=100 is virtually hopeless.
 
-Unless one places a bounty in the Indian market. Who knows how many Ramanujans are there.
-
 ## Some Further Research on CEC-2017 Composites
 
 - To my knowledge, the CEC-2020 algorithms were the first to solve some of the CEC-2017 composite functions: IMODE, AGSK, j2020... The top 4 in CEC-2017 were not there (e.g. jSO is vastly inferior to j2020). I am not sure about CEC-2018, while CEC-2019 was a different problem set. Despite IMODE's minor use of SQP to fine tune, no matrices are needed to deal with severe ill-conditioning, think about it!
 
-- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. Minion's implementation is ~3x slower to execute than the original. j2020 is a very solid idea, keep a large population and 7x smaller population running 7x longer. The latter acts like a local optimizer. Crowding replaces similar offspring with offspring rather than parents with offspring, acts better against the population collapse. These two techniques lead to a much better algorithm than jSO. 
+- j2020 solved F22 CEC-2017 D=10,15,20 and F24 CEC-2017 D=10. Minion's implementation is ~3x slower to execute than the original. j2020 adds to jDE-2006 two ideas: (i) an additional small population which acts like a local optimizer, and (ii) crowding which replaces similar offspring with offspring rather than with the parent (copes better with population collapse). These two techniques lead to a much better algorithm than jSO-2017. 
 
-- j2020's pseudocode is the prettiest I have seen, with the right level of granularity. 
+- j2020's pseudocode is the prettiest I have seen. It uses the right level of granularity. 
 
 - Sadly, j2020 performs worse than ARRDE, and I did not experience a miracle with j2020 at 2B evals (nor with jDE100 which did occur for the authors in CEC-2019).
 
@@ -717,7 +716,7 @@ References:
 
 ## Further Notes
 
-- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of theory with experiments here, but little interesting ever comes from these big generic frameworks.
+- Tunneling and filling functions (see Aimo Törn and Antanas Žilinskas (1987) Global Optimization) in theory provide natural mechanisms to escape entrapment, but **the auxiliary problem is not simpler than the original.** The same holds for Bayesian Optimization. You had one problem to solve, now you have two or three (hyperparameters). One can do a lot of experiments here, but little interesting ever comes from these big generic frameworks.
 
 - Mopdern DEs are pale on [Lunacek's bi-Rastrigin](https://coco-platform.org/testsuites/bbob/functions/f24.html) already in D=20, while (mu, lambda)-ES and BIPOP-aCMAES solve the problem in D=40 very rapidly in <10M evals. This cost function mixes quadrics with harmonics via sum and min operators and is used a lot in physics. Normally not a black box though, we have a gradient. Nonetheless, this shows that DEs can be very suboptimal on well-conditioned problems in D>10.
 
@@ -747,25 +746,15 @@ evals=   110000000  best_f=2.500000024338e+03  ||xbest||=1.479658e+02  time=    
 
 Bingo. A needle in a haystack is a solved problem in D=10.
 
-So now everything becomes ordered into their specific niche domains. ARRDE now only makes sense in D=20, but one needs to be very lucky to hit problems such as F24 CEC-207 or F28 CEC-2017, and still tinker with vanilla ARRDE to make it solve these two cases.
-
-A massively restarted SLSQP with box constraints may not reach the global optima in D=20 under 1B evals, but it hits those "next in line" optima in just 10..30M evals: f=2500 on F24, f=2600 on F25, f=2900 on F28. This is much better than BIPOP-aCMAES and sometimes even better than ARRDE.
-
-- A well-posed problem in D<100: (mu, lambda)-ES, CMAES, BIPOP-aCMAES. SLSQP/BFGS if it is unimodal.
-
-- An ill-conditioned problem up to D=10: massively restarted SLSQP, no need for ARRDE or any DE anymore.
-
-- An ill-conditioned problem in D>10: ARRDE (maybe), better avoid it entirely.
-
-Why avoiding? The field of DEs is now over 30 years old, the algorithms become complex and overtuned, but the performance saturates and hits the wall around D=20. In D=10, however, a restarted SLSQP works fine or even better than ARRDE, and there is little to tune, not to mention an embarrassing parallelism.
+This massively restarted SLSQP with box constraints may no longer reach global optima in D=20 under 1B evals. It hits those "next in line" suboptimal points in just 10..30M evals: f=2500 on F24, f=2900 on F28. f=2600 on F25 demands 150M evals. This is much better than BIPOP-aCMAES and sometimes even better than ARRDE.
 
 ## Why SLSQP and Not BFGS/L-BFGS-B
 
-To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates as well.
+To restart a million times, one needs to run something smart for very few iterations, e.g. the SLSQP with 100..300 iterations. This algorithm was chosen by Niklaus Hansen in his 2019 report on the CMAES with surrogates as well.
 
-SLSQP is a general algorithm which handles all sorts of constraints, while L-BFGS-B specializes to the box constraints only, which is exactly what we need here. A more special algorithm will be better. 
+SLSQP is a general algorithm which handles nonlinear constraints with the method of Lagrange. L-BFGS-B specializes to the box constraints only, which is exactly what we need here. A more special algorithm will be better. 
 
-Wrong! BFGS turns out to run 10x slower than SLSQP in this D=10 and small iteration numbers mode.
+Wrong! BFGS turns out to run 10x slower than SLSQP in this special D=10 and small iteration numbers mode.
 
 My prompt to Grok:
 
@@ -794,7 +783,7 @@ Kraft D (1988) [A software package for sequential quadratic programming. Tech. R
 
 ## What If the Problem Is Not a Needle in a Haystack?
 
-Well-posed problems such as the F24 BBOB-2009 are a lot harder to solve :).
+Well-conditioned problems such as the F24 BBOB-2009 are a lot harder to solve :).
 
 Still solvable in D=10, but restarting SLSQP is not particularly efficient. Roughly 1000x worse than (mu,lambda)-ES or BIPOP-aCMAES in evals. ARRDE is horrid here too.
 
@@ -851,5 +840,15 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 ...
 ```
 
-No need to despair. Let me remind you where we have started: (mu, lambda)-ES solves this problem. No matrices, no BIPOP/NIPOP/NBIPOP active something grid searches needed.
+## Summary
+
+- Unimodal + ill-conditioned: SLSQP/BFGS.
+
+- Multimodal + well-conditioned, D < 100: (mu, lambda)-ES.
+
+- Multimodal + ill-conditioned with a single matrix, D<100: BIPOP-aCMAES.
+
+- Multimodal + ill-conditioned, D <= 10: massively restarted SLSQP, no tuning, no parameters.
+
+- Multimodal + ill-conditioned, D > 10: ARRDE, or avoid it entirely (generally non-solvable).
 
