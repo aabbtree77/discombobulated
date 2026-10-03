@@ -842,17 +842,10 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 
 - Unimodal + ill-conditioned: SLSQP/BFGS.
 
-- Multimodal + well-conditioned, D<100: (mu, lambda)-ES.
+- Multimodal + ill-conditioned, D<=10: massively restarted SLSQP.
 
-- Multimodal + ill-conditioned with a single matrix, D<100: BIPOP-aCMAES.
-
-- Multimodal + ill-conditioned, D<=10: massively restarted SLSQP, no tuning, no parameters.
-
-- Multimodal + ill-conditioned, D=20: massively restarted SLSQP on a server, ARRDE in some cases.
+- Multimodal + ill-conditioned, D=20: massively restarted SLSQP on a server.
 
 - Multimodal + ill-conditioned, D=30: avoid it entirely (non-solvable at the moment).
 
-## Hypothesis
-
-In D=10, the number of restarts required by SLSQP to solve any problem is 100 x cube corners, i.e. O(1e5).
-Does this extend to any D? If yes, this practically rules out all the modern DEs. In D=20, we would need O(1e8) restarts. I wish I had INRIA PACA Grid available. 
+Avoid anything else.
