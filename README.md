@@ -848,4 +848,19 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 
 - Multimodal + ill-conditioned, D=30: avoid it entirely (non-solvable at the moment).
 
-Avoid anything else.
+**Num of restarts = ~(max coord range/glob optimum width) x Num of cube corners in D.**
+
+The latter still needs to be verified in D=20, it could be worse, e.g.
+
+**Num of restarts = ~(max coord range/glob optimum width)^F x Num of cube corners in D,**
+
+where F is lg(Num of cube corners in D) - 2.
+
+Both estimates fit D=10.
+
+For F25 CEC-2017:
+
+- D=10: O(1e5) restarts or 100M evals.
+- D=20: O(1e8) restarts or 100B evals. If worse: O(1e12) restarts or O(1e15) evals.
+
+It is better to verify this on F24 CEC-2017 in D=20 where range/width is 4x smaller.
