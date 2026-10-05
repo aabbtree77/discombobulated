@@ -838,6 +838,10 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 ...
 ```
 
+>**“Long is the way and hard, that out of Hell leads up to light.”**
+>
+> \- John Milton,  Paradise Lost 1667
+
 ## Summary
 
 - Unimodal + ill-conditioned: SLSQP/BFGS.
@@ -850,17 +854,15 @@ evals=   440000000  best_f=2.086158215018e+02  ||xbest||=5.673508e+00  time=   1
 
 **Num of restarts = ~(max coord range/glob optimum width) x Num of cube corners in D.**
 
-The latter still needs to be verified in D=20, it could be worse, e.g.
-
-**Num of restarts = ~(max coord range/glob optimum width)^F x Num of cube corners in D,**
-
-where F is lg(Num of cube corners in D) - 2.
-
-Both estimates fit D=10.
+Let us hope (max coord range/glob optimum width) is not (max coord range/glob optimum width)^F, where F is lg(Num of cube corners in D) - 2. This formula matches D=10 too, but would add 4 extra orders in D=20.
 
 For F25 CEC-2017:
 
 - D=10: O(1e5) restarts or 100M evals.
-- D=20: O(1e8) restarts or 100B evals. If worse: O(1e12) restarts or O(1e15) evals.
+- D=20: O(1e8) restarts or 100B evals.
 
 It is better to verify this on F24 CEC-2017 in D=20 where range/width is 4x smaller.
+
+Massively restarted SLSQP is a solid underrated technology which solves everything up to D=10. Beyond that, it becomes too computationally demanding for contemporary resources. 
+
+For D>10, we have DE and ES. The best DEs (e.g. ARRDE) are very bad on problems such as F24 BBOB-2009 and do not solve F25 CEC-2017 already in D=20. ES/CMAES are horrid at ill-conditioning and might solve only special cases with a single mixing matrix.
